@@ -1,0 +1,138 @@
+import CustomSwitch from '@base/components/CustomSwitch';
+import { getAccess } from '@modules/auth/lib/utils/client';
+import type { PaginationProps, TableColumnsType } from 'antd';
+import { Button, Drawer, Form, Table, message } from 'antd';
+import React, { useState } from 'react';
+import { AiFillEdit } from 'react-icons/ai';
+import { EntrepreneursHooks } from '../lib/hooks';
+import { IEntrepreneur } from '../lib/interfaces';
+import EntrepreneursForm from './EntrepreneursForm';
+
+interface IProps {
+  isLoading: boolean;
+  data: IEntrepreneur[];
+  pagination: PaginationProps;
+}
+
+const EntrepreneursList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
+  const [messageApi, messageHolder] = message.useMessage();
+  const [formInstance] = Form.useForm();
+  const [updateItem, setUpdateItem] = useState<IEntrepreneur>(null);
+
+  const entrepreneurUpdateFn = EntrepreneursHooks.useUpdate({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+
+        setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const dataSource = data?.map((elem) => ({
+    key: elem?.id,
+    id: elem?.id,
+    name: elem?.name,
+    designation: elem?.designation,
+    isActive: elem?.isActive,
+    createdAt: elem?.createdAt,
+    createdBy: elem?.createdBy?.fullName,
+    updatedAt: elem?.updatedAt,
+    updatedBy: elem?.updatedBy?.fullName,
+  }));
+
+  const columns: TableColumnsType<(typeof dataSource)[number]> = [
+    {
+      key: 'name',
+      dataIndex: 'name',
+      title: 'Name',
+    },
+    {
+      key: 'designation',
+      dataIndex: 'designation',
+      title: 'Designation',
+      render: (designation) => designation || 'N/A',
+    },
+    {
+      key: 'isActive',
+      dataIndex: 'isActive',
+      title: 'Active',
+      render: (isActive, record) => {
+        return (
+          <CustomSwitch
+            checked={isActive}
+            onChange={(checked) => {
+              getAccess(['entrepreneurs:update'], () => {
+                entrepreneurUpdateFn.mutate({
+                  id: record?.id,
+                  data: {
+                    isActive: checked,
+                  },
+                });
+              });
+            }}
+          />
+        );
+      },
+    },
+    {
+      key: 'id',
+      dataIndex: 'id',
+      title: 'Action',
+      align: 'center',
+      render: (id) => (
+        <Button
+          onClick={() => {
+            getAccess(['entrepreneurs:update'], () => {
+              const item = data?.find((item) => item.id === id);
+              setUpdateItem(item);
+            });
+          }}
+        >
+          <AiFillEdit />
+        </Button>
+      ),
+    },
+  ];
+
+  return (
+    <React.Fragment>
+      {messageHolder}
+      <Table
+        loading={isLoading}
+        dataSource={dataSource}
+        columns={columns}
+        pagination={pagination}
+        scroll={{ x: true }}
+      />
+      <Drawer
+        width={640}
+        title={`Update ${updateItem?.name}`}
+        open={!!updateItem?.id}
+        onClose={() => setUpdateItem(null)}
+      >
+        <EntrepreneursForm
+          formType="update"
+          form={formInstance}
+          initialValues={{
+            ...updateItem,
+            isActive: updateItem?.isActive,
+          }}
+          isLoading={entrepreneurUpdateFn.isPending}
+          onFinish={(values) =>
+            entrepreneurUpdateFn.mutate({
+              id: updateItem?.id,
+              data: values,
+            })
+          }
+        />
+      </Drawer>
+    </React.Fragment>
+  );
+};
+
+export default EntrepreneursList;

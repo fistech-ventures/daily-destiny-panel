@@ -1,0 +1,24 @@
+@import '../@base/components/RichTextEditor/styles/_variables.scss';
+@import '../@base/components/RichTextEditor/styles/_keyframe-animations.scss';
+
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *, [data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --font-roboto: var(--font-roboto);
+}
+
+@layer components {
+  .container {
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* AntD */
+.ant-btn-primary {
+  box-shadow: none !important;
+}

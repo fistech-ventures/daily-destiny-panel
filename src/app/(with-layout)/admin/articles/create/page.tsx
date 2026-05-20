@@ -1,0 +1,55 @@
+'use client';
+
+import PageHeader from '@base/components/PageHeader';
+import ArticlesForm from '@modules/articles/components/ArticlesForm';
+import { ArticlesHooks } from '@modules/articles/lib/hooks';
+import WithAuthorization from '@modules/auth/components/WithAuthorization';
+import { Form, message } from 'antd';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+
+const CreateArticlePage = () => {
+  const router = useRouter();
+  const [messageApi, messageHolder] = message.useMessage();
+  const [formInstance] = Form.useForm();
+  const [shouldReset, setShouldReset] = useState(false);
+
+  const articleCreateFn = ArticlesHooks.useCreate({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          setShouldReset(false);
+          return;
+        }
+
+        formInstance.resetFields();
+        messageApi.success(res.message);
+        setShouldReset(true);
+        router.push('/admin/articles/list');
+      },
+    },
+  });
+
+  return (
+    <React.Fragment>
+      {messageHolder}
+      <PageHeader
+        title="Create New Article"
+        onBack={() => router.push('/admin/articles/list')}
+      />
+      <div className="bg-white dark:bg-[#141414] p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
+        <ArticlesForm
+          formType="create"
+          form={formInstance}
+          initialValues={{ isExclusive: false, isActive: true, isFeatured: false }}
+          isLoading={articleCreateFn.isPending}
+          onFinish={(values) => articleCreateFn.mutate(values)}
+          shouldReset={shouldReset}
+        />
+      </div>
+    </React.Fragment>
+  );
+};
+
+export default WithAuthorization(CreateArticlePage, { allowedAccess: ['articles:write'] });
