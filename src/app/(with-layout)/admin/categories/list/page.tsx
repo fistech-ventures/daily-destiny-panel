@@ -75,6 +75,8 @@ const CategoriesPage = () => {
           current: page,
           pageSize: limit,
           total: categoriesQuery.data?.meta?.total,
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
           onChange: (page, limit) => {
             const params = Toolbox.toCleanObject({ ...Object.fromEntries(searchParams.entries()), page, limit });
             const queryString = new URLSearchParams(params).toString();
