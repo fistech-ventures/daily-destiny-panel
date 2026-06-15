@@ -12,6 +12,8 @@ import { AuthorsHooks } from '@modules/authors/lib/hooks';
 import { IAuthor } from '@modules/authors/lib/interfaces';
 import { CategoriesHooks } from '@modules/categories/lib/hooks';
 import { ICategory } from '@modules/categories/lib/interfaces';
+import { LocationsHooks } from '@modules/locations/lib/hooks';
+import { ILocation } from '@modules/locations/lib/interfaces';
 import { SubCategoriesHooks } from '@modules/sub-categories/lib/hooks';
 import { ISubCategory } from '@modules/sub-categories/lib/interfaces';
 import { Button, Card, Col, Form, FormInstance, Radio, Row, Select, Space } from 'antd';
@@ -43,6 +45,9 @@ const ArticlesForm: React.FC<IProps> = ({
   const [categorySearchTerm, setCategorySearchTerm] = useState(null);
   const [subCategorySearchTerm, setSubCategorySearchTerm] = useState(null);
   const [authorSearchTerm, setAuthorSearchTerm] = useState(null);
+  const [divisionSearchTerm, setDivisionSearchTerm] = useState(null);
+  const [districtSearchTerm, setDistrictSearchTerm] = useState(null);
+  const [upazillaSearchTerm, setUpazillaSearchTerm] = useState(null);
 
   const getFileMeta = (url: string) => {
     if (!url) return { extension: '', mimetype: '' };
@@ -183,6 +188,59 @@ const ArticlesForm: React.FC<IProps> = ({
       limit: 20,
       searchTerm: authorSearchTerm,
       isActive: 'true',
+    },
+  });
+
+  const divisionQuery = LocationsHooks.useFindById({
+    id: formValues?.divisionId,
+    config: {
+      queryKey: [],
+      enabled: !!formValues?.divisionId,
+    },
+  });
+
+  const divisionsQuery = LocationsHooks.useFindInfinite({
+    options: {
+      limit: 20,
+      searchTerm: divisionSearchTerm,
+      isActive: 'true',
+      type: 'division',
+    },
+  });
+
+  const districtQuery = LocationsHooks.useFindById({
+    id: formValues?.districtId,
+    config: {
+      queryKey: [],
+      enabled: !!formValues?.districtId,
+    },
+  });
+
+  const districtsQuery = LocationsHooks.useFindInfinite({
+    options: {
+      limit: 20,
+      searchTerm: districtSearchTerm,
+      isActive: 'true',
+      type: 'district',
+      parentId: formValues?.divisionId || undefined,
+    },
+  });
+
+  const upazillaQuery = LocationsHooks.useFindById({
+    id: formValues?.upazillaId,
+    config: {
+      queryKey: [],
+      enabled: !!formValues?.upazillaId,
+    },
+  });
+
+  const upazillasQuery = LocationsHooks.useFindInfinite({
+    options: {
+      limit: 20,
+      searchTerm: upazillaSearchTerm,
+      isActive: 'true',
+      type: 'upazilla',
+      parentId: formValues?.districtId || undefined,
     },
   });
 
@@ -386,6 +444,72 @@ const ArticlesForm: React.FC<IProps> = ({
                 onChangeSearchTerm={(searchTerm) => setSubCategorySearchTerm(searchTerm)}
                 query={subCategoriesQuery}
                 disabled={!formValues?.categoryId}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item name="divisionId" className="!mb-0" rules={[{ required: false }]}>
+              <InfiniteScrollSelect<ILocation>
+                isFloat
+                allowClear
+                showSearch
+                virtual={false}
+                placeholder="Division (Optional)"
+                initialOptions={divisionQuery.data?.data?.id ? [divisionQuery.data?.data] : []}
+                option={({ item: location }) => ({
+                  key: location?.id,
+                  label: `${location?.name} (${location?.nameBn})`,
+                  value: location?.id,
+                })}
+                onChangeSearchTerm={(searchTerm) => setDivisionSearchTerm(searchTerm)}
+                query={divisionsQuery}
+                onChange={() => {
+                  form.setFieldValue('districtId', undefined);
+                  form.setFieldValue('upazillaId', undefined);
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item name="districtId" className="!mb-0" rules={[{ required: false }]}>
+              <InfiniteScrollSelect<ILocation>
+                isFloat
+                allowClear
+                showSearch
+                virtual={false}
+                placeholder="District (Optional)"
+                initialOptions={districtQuery.data?.data?.id ? [districtQuery.data?.data] : []}
+                option={({ item: location }) => ({
+                  key: location?.id,
+                  label: `${location?.name} (${location?.nameBn})`,
+                  value: location?.id,
+                })}
+                onChangeSearchTerm={(searchTerm) => setDistrictSearchTerm(searchTerm)}
+                query={districtsQuery}
+                disabled={!formValues?.divisionId}
+                onChange={() => {
+                  form.setFieldValue('upazillaId', undefined);
+                }}
+              />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Form.Item name="upazillaId" className="!mb-0" rules={[{ required: false }]}>
+              <InfiniteScrollSelect<ILocation>
+                isFloat
+                allowClear
+                showSearch
+                virtual={false}
+                placeholder="Upazilla (Optional)"
+                initialOptions={upazillaQuery.data?.data?.id ? [upazillaQuery.data?.data] : []}
+                option={({ item: location }) => ({
+                  key: location?.id,
+                  label: `${location?.name} (${location?.nameBn})`,
+                  value: location?.id,
+                })}
+                onChangeSearchTerm={(searchTerm) => setUpazillaSearchTerm(searchTerm)}
+                query={upazillasQuery}
+                disabled={!formValues?.districtId}
               />
             </Form.Item>
           </Col>

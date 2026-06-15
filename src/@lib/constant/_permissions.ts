@@ -90,4 +90,9 @@ export const Permissions = {
   MARKET_PRICES_DELETE: 'market-prices:delete',
 
   SETTINGS_READ: 'settings:read',
+
+  LOCATIONS_READ: 'locations:read',
+  LOCATIONS_WRITE: 'locations:write',
+  LOCATIONS_UPDATE: 'locations:update',
+  LOCATIONS_DELETE: 'locations:delete',
 } as const;

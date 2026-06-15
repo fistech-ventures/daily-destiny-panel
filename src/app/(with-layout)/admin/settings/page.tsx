@@ -3,7 +3,7 @@
 import WithAuthorization from '@modules/auth/components/WithAuthorization';
 import SettingsIdentityForm from '@modules/settings/components/SettingsIdentityForm';
 import SettingsScriptsForm from '@modules/settings/components/SettingsScriptsForm';
-import SettingsTrackingCodesForm from '@modules/settings/components/SettingsTrackingCodesForm';
+// import SettingsTrackingCodesForm from '@modules/settings/components/SettingsTrackingCodesForm';
 import { SettingsHooks } from '@modules/settings/lib/hooks';
 import { Form, message, Spin, Tabs, TabsProps } from 'antd';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ const SettingsPage = () => {
   const router = useRouter();
   const [messageApi, messageHolder] = message.useMessage();
   const [identityFormInstance] = Form.useForm();
-  const [trackingCodesFormInstance] = Form.useForm();
+  // const [trackingCodesFormInstance] = Form.useForm();
   const [scriptsFormInstance] = Form.useForm();
 
   const settingsQuery = SettingsHooks.useFind();
@@ -46,23 +46,23 @@ const SettingsPage = () => {
         />
       ),
     },
-    {
-      key: 'tracking-codes',
-      label: 'Tracking Codes',
-      children: (
-        <SettingsTrackingCodesForm
-          formType="update"
-          form={trackingCodesFormInstance}
-          isLoading={settingsQuery.isLoading}
-          initialValues={settingsQuery.data?.data?.trackingCodes}
-          onFinish={(values) =>
-            settingsUpdateFn.mutate({
-              trackingCodes: values,
-            })
-          }
-        />
-      ),
-    },
+    // {
+    //   key: 'tracking-codes',
+    //   label: 'Tracking Codes',
+    //   children: (
+    //     <SettingsTrackingCodesForm
+    //       formType="update"
+    //       form={trackingCodesFormInstance}
+    //       isLoading={settingsQuery.isLoading}
+    //       initialValues={settingsQuery.data?.data?.trackingCodes}
+    //       onFinish={(values) =>
+    //         settingsUpdateFn.mutate({
+    //           trackingCodes: values,
+    //         })
+    //       }
+    //     />
+    //   ),
+    // },
     {
       key: 'scripts',
       label: 'Scripts',

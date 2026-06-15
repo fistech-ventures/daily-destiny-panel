@@ -77,6 +77,10 @@ export const Paths = {
       root: '/admin/startups',
       list: '/admin/startups/list',
     },
+    locations: {
+      root: '/admin/locations',
+      list: '/admin/locations/list',
+    },
     cms: {
       root: '/admin/cms',
       menus: {

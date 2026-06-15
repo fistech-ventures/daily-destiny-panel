@@ -14,7 +14,7 @@ const roboto = Roboto({
   variable: '--font-roboto',
 });
 
-const defaultMetadataTitle = 'Entrepreneur News';
+const defaultMetadataTitle = 'Daily Destiny';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getCachedQuickSettingsFn();

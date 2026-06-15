@@ -2,6 +2,7 @@ import { IBaseEntity, IBaseFilter, IBaseResponse, TId } from '@base/interfaces';
 import { IAuthor } from '@modules/authors/lib/interfaces';
 import { ICategory } from '@modules/categories/lib/interfaces';
 import { ISubCategory } from '@modules/sub-categories/lib/interfaces';
+import { ILocation } from '@modules/locations/lib/interfaces';
 import { TArticlesStatusType } from './enums';
 import { IUser } from '@modules/users/lib/interfaces';
 
@@ -16,6 +17,10 @@ export interface IArticlesFilter extends IBaseFilter {
   updatedById?: TId;
   publishedById?: TId;
   subCategoryId?: TId;
+  locationId?: TId;
+  divisionId?: TId;
+  districtId?: TId;
+  upazillaId?: TId;
 }
 
 export interface IMedia {
@@ -59,6 +64,11 @@ export interface IArticle extends IBaseEntity {
   metaDescription: string;
   subCategoryId?: TId;
   subCategory?: ISubCategory;
+  locationId?: TId;
+  location?: ILocation;
+  divisionId?: TId;
+  districtId?: TId;
+  upazillaId?: TId;
   medias?: IMedia[];
   publishedBy: IUser;
   createdBy: IUser;
@@ -86,6 +96,10 @@ export interface IArticleCreate {
   authorId: TId;
   categoryId: TId;
   subCategoryId?: TId;
+  locationId?: TId;
+  divisionId?: TId;
+  districtId?: TId;
+  upazillaId?: TId;
   isActive: boolean;
   medias?: IMedia[];
   tags: string[];

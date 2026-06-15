@@ -1,5 +1,5 @@
 export const ImagePaths = {
-  logo: '/images/brand_logo.svg',
+  logo: '/images/brand_logo.png',
   avatar: '/images/avatar.svg',
   placeHolder: '/images/placeholder.svg',
   notFound: '/images/not_found.jpg',

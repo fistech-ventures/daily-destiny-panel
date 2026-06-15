@@ -1,8 +1,8 @@
-import CustomLink from '@base/components/CustomLink';
-import { Paths, Permissions } from '@lib/constant';
-import { Toolbox } from '@lib/utils';
-import { getContentAccess } from '@modules/auth/lib/utils/client';
-import { Menu } from 'antd';
+import CustomLink from "@base/components/CustomLink";
+import { Paths, Permissions } from "@lib/constant";
+import { Toolbox } from "@lib/utils";
+import { getContentAccess } from "@modules/auth/lib/utils/client";
+import { Menu } from "antd";
 import {
   FaArchive,
   FaPlusCircle,
@@ -11,27 +11,25 @@ import {
   FaUsers,
   FaUserShield,
   FaUserTag,
-  FaUserTie,
-} from 'react-icons/fa';
-import { CiCircleList } from 'react-icons/ci';
-import { GrUserAdmin } from 'react-icons/gr';
-import { TiInputChecked } from 'react-icons/ti';
-import { MdOutlineFeaturedVideo, MdLabelImportantOutline } from "react-icons/md";
-
+} from "react-icons/fa";
+import { CiCircleList } from "react-icons/ci";
+import { GrUserAdmin } from "react-icons/gr";
+import { TiInputChecked } from "react-icons/ti";
+import {
+  MdOutlineFeaturedVideo,
+  MdLabelImportantOutline,
+} from "react-icons/md";
 
 import {
-  MdBusiness,
   MdCategory,
   MdDashboard,
-  MdInsertDriveFile,
-  MdMenu,
+  MdLocationOn,
   MdOutlineAdsClick,
   MdOutlineDrafts,
   MdOutlinePriceChange,
-  MdPoll,
   MdTag,
-} from 'react-icons/md';
-import { RiArticleLine, RiLayout2Fill, RiUserStarFill } from 'react-icons/ri';
+} from "react-icons/md";
+import { RiArticleLine, RiUserStarFill } from "react-icons/ri";
 
 interface IProps {
   className?: string;
@@ -40,7 +38,12 @@ interface IProps {
   onOpenChange: (openKeys: string[]) => void;
 }
 
-const AdminMenu: React.FC<IProps> = ({ className, selectedKeys, openKeys, onOpenChange }) => {
+const AdminMenu: React.FC<IProps> = ({
+  className,
+  selectedKeys,
+  openKeys,
+  onOpenChange,
+}) => {
   return (
     <Menu
       className={className}
@@ -59,89 +62,131 @@ const AdminMenu: React.FC<IProps> = ({ className, selectedKeys, openKeys, onOpen
           content: {
             key: Paths.admin.users.list,
             icon: <FaUsers />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.users.list)}>Users</CustomLink>,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.users.list)}
+              >
+                Users
+              </CustomLink>
+            ),
           },
-          allowedAccess: ['users:read'],
+          allowedAccess: ["users:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.roleManager.root,
             icon: <FaUserShield />,
-            label: 'Role Manager',
+            label: "Role Manager",
             children: [
               getContentAccess({
                 content: {
                   key: Paths.admin.roleManager.permissionTypes.list,
                   icon: <RiUserStarFill />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.roleManager.permissionTypes.list)}>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.roleManager.permissionTypes.list,
+                      )}
+                    >
                       Permission Types
                     </CustomLink>
                   ),
                 },
-                allowedAccess: ['role-manager-permission-types:read'],
+                allowedAccess: ["role-manager-permission-types:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.roleManager.permissions.list,
                   icon: <FaUserTag />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.roleManager.permissions.list)}>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.roleManager.permissions.list,
+                      )}
+                    >
                       Permissions
                     </CustomLink>
                   ),
                 },
-                allowedAccess: ['role-manager-permissions:read'],
+                allowedAccess: ["role-manager-permissions:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.roleManager.roles.list,
                   icon: <GrUserAdmin />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.roleManager.roles.list)}>Roles</CustomLink>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.roleManager.roles.list,
+                      )}
+                    >
+                      Roles
+                    </CustomLink>
                   ),
                 },
-                allowedAccess: ['role-manager-roles:read'],
+                allowedAccess: ["role-manager-roles:read"],
               }),
             ],
           },
           allowedAccess: [
-            'role-manager-permission-types:read',
-            'role-manager-permissions:read',
-            'role-manager-roles:read',
+            "role-manager-permission-types:read",
+            "role-manager-permissions:read",
+            "role-manager-roles:read",
           ],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.categories.list,
             icon: <MdCategory />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.categories.list)}>Categories</CustomLink>,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.categories.list)}
+              >
+                Categories
+              </CustomLink>
+            ),
           },
-          allowedAccess: ['categories:read'],
+          allowedAccess: ["categories:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.subCategories.list,
             icon: <MdCategory />,
             label: (
-              <CustomLink href={Toolbox.appendPagination(Paths.admin.subCategories.list)}>Sub Categories</CustomLink>
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.subCategories.list)}
+              >
+                Sub Categories
+              </CustomLink>
             ),
           },
-          allowedAccess: ['sub-categories:read'],
+          allowedAccess: ["sub-categories:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.authors.list,
             icon: <FaUserEdit />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.authors.list)}>Authors</CustomLink>,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.authors.list)}
+              >
+                Authors
+              </CustomLink>
+            ),
           },
-          allowedAccess: ['authors:read'],
+          allowedAccess: ["authors:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.tags.root,
             icon: <MdTag />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.tags.root)}>Tags</CustomLink>,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.tags.root)}
+              >
+                Tags
+              </CustomLink>
+            ),
           },
           allowedAccess: [Permissions.TAGS_READ],
         }),
@@ -149,159 +194,167 @@ const AdminMenu: React.FC<IProps> = ({ className, selectedKeys, openKeys, onOpen
           content: {
             key: Paths.admin.articles.root,
             icon: <RiArticleLine />,
-            label: 'Articles',
+            label: "Articles",
             children: [
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.create,
                   icon: <FaPlusCircle />,
-                  label: <CustomLink href={Paths.admin.articles.create}>Create</CustomLink>,
+                  label: (
+                    <CustomLink href={Paths.admin.articles.create}>
+                      Create
+                    </CustomLink>
+                  ),
                 },
-                allowedAccess: ['articles:write'],
+                allowedAccess: ["articles:write"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.featured,
                   icon: <MdOutlineFeaturedVideo />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.featured)}>Featured</CustomLink>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.articles.featured,
+                      )}
+                    >
+                      Featured
+                    </CustomLink>
                   ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.exclusive,
                   icon: <MdLabelImportantOutline />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.exclusive)}>Exclusive</CustomLink>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.articles.exclusive,
+                      )}
+                    >
+                      Exclusive
+                    </CustomLink>
                   ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.published,
                   icon: <TiInputChecked />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.published)}>Published</CustomLink>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.articles.published,
+                      )}
+                    >
+                      Published
+                    </CustomLink>
                   ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.drafted,
                   icon: <MdOutlineDrafts />,
-                  label: <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.drafted)}>Drafted</CustomLink>,
+                  label: (
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.articles.drafted,
+                      )}
+                    >
+                      Drafted
+                    </CustomLink>
+                  ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.archived,
                   icon: <FaArchive />,
                   label: (
-                    <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.archived)}>Archived</CustomLink>
+                    <CustomLink
+                      href={Toolbox.appendPagination(
+                        Paths.admin.articles.archived,
+                      )}
+                    >
+                      Archived
+                    </CustomLink>
                   ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
               getContentAccess({
                 content: {
                   key: Paths.admin.articles.list,
                   icon: <CiCircleList />,
-                  label: <CustomLink href={Toolbox.appendPagination(Paths.admin.articles.list)}>List</CustomLink>,
+                  label: (
+                    <CustomLink
+                      href={Toolbox.appendPagination(Paths.admin.articles.list)}
+                    >
+                      List
+                    </CustomLink>
+                  ),
                 },
-                allowedAccess: ['articles:read'],
+                allowedAccess: ["articles:read"],
               }),
             ],
           },
-          allowedAccess: ['articles:read', 'articles:write'],
-        }),
-        getContentAccess({
-          content: {
-            key: Paths.admin.polls.list,
-            icon: <MdPoll />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.polls.list)}>Polls</CustomLink>,
-          },
-          allowedAccess: ['polls:read'],
+          allowedAccess: ["articles:read", "articles:write"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.ads.list,
             icon: <MdOutlineAdsClick />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.ads.list)}>Ads</CustomLink>,
+            label: (
+              <CustomLink href={Toolbox.appendPagination(Paths.admin.ads.list)}>
+                Ads
+              </CustomLink>
+            ),
           },
-          allowedAccess: ['ads:read'],
+          allowedAccess: ["ads:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.marketPrice.list,
             icon: <MdOutlinePriceChange />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.marketPrice.list)}>Market Price</CustomLink>,
-          },
-          allowedAccess: ['market-prices:read'],
-        }),
-        getContentAccess({
-          content: {
-            key: Paths.admin.entrepreneurs.list,
-            icon: <FaUserTie />,
             label: (
-              <CustomLink href={Toolbox.appendPagination(Paths.admin.entrepreneurs.list)}>Entrepreneurs</CustomLink>
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.marketPrice.list)}
+              >
+                Market Price
+              </CustomLink>
             ),
           },
-          allowedAccess: ['entrepreneurs:read'],
+          allowedAccess: ["market-prices:read"],
         }),
         getContentAccess({
           content: {
-            key: Paths.admin.startups.list,
-            icon: <MdBusiness />,
-            label: <CustomLink href={Toolbox.appendPagination(Paths.admin.startups.list)}>Startups</CustomLink>,
+            key: Paths.admin.locations.list,
+            icon: <MdLocationOn />,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.locations.list)}
+              >
+                Locations
+              </CustomLink>
+            ),
           },
-          allowedAccess: ['startups:read'],
-        }),
-        getContentAccess({
-          content: {
-            key: Paths.admin.cms.root,
-            icon: <FaUserShield />,
-            label: 'CMS',
-            children: [
-              getContentAccess({
-                content: {
-                  key: Paths.admin.cms.menus.list,
-                  icon: <MdMenu />,
-                  label: <CustomLink href={Toolbox.appendPagination(Paths.admin.cms.menus.list)}>Menus</CustomLink>,
-                },
-                allowedAccess: ['cms-menus:read'],
-              }),
-              getContentAccess({
-                content: {
-                  key: Paths.admin.cms.pages.list,
-                  icon: <MdInsertDriveFile />,
-                  label: <CustomLink href={Toolbox.appendPagination(Paths.admin.cms.pages.list)}>Pages</CustomLink>,
-                },
-                allowedAccess: ['cms-pages:read'],
-              }),
-              getContentAccess({
-                content: {
-                  key: Paths.admin.cms.layout.root,
-                  icon: <RiLayout2Fill />,
-                  label: <CustomLink href={Toolbox.appendPagination(Paths.admin.cms.layout.root)}>Layout</CustomLink>,
-                },
-                allowedAccess: ['cms-layout:read'],
-              }),
-            ],
-          },
-          allowedAccess: ['cms-layout:read', 'cms-menus:read'],
+          allowedAccess: ["locations:read"],
         }),
         getContentAccess({
           content: {
             key: Paths.admin.settings.root,
             icon: <FaTools />,
-            label: <CustomLink href={Paths.admin.settings.root}>Settings</CustomLink>,
+            label: (
+              <CustomLink href={Paths.admin.settings.root}>Settings</CustomLink>
+            ),
           },
-          allowedAccess: ['settings:read'],
+          allowedAccess: ["settings:read"],
         }),
       ]}
     />

@@ -4,6 +4,8 @@ import { AuthorsHooks } from '@modules/authors/lib/hooks';
 import { IAuthor } from '@modules/authors/lib/interfaces';
 import { CategoriesHooks } from '@modules/categories/lib/hooks';
 import { ICategory } from '@modules/categories/lib/interfaces';
+import { LocationsHooks } from '@modules/locations/lib/hooks';
+import { ILocation } from '@modules/locations/lib/interfaces';
 import { SubCategoriesHooks } from '@modules/sub-categories/lib/hooks';
 import { ISubCategory } from '@modules/sub-categories/lib/interfaces';
 import { UsersHooks } from '@modules/users/lib/hooks';
@@ -35,6 +37,11 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
   const [createdByUserSearchTerm, setCreatedByUserSearchTerm] = useState<string | null>(null);
   const [updatedByUserSearchTerm, setUpdatedByUserSearchTerm] = useState<string | null>(null);
   const [publishedByUserSearchTerm, setPublishedByUserSearchTerm] = useState<string | null>(null);
+  const [divisionSearchTerm, setDivisionSearchTerm] = useState<string | null>(null);
+  const [districtSearchTerm, setDistrictSearchTerm] = useState<string | null>(null);
+  const [upazillaSearchTerm, setUpazillaSearchTerm] = useState<string | null>(null);
+  const divisionId = Form.useWatch('divisionId', formInstance);
+  const districtId = Form.useWatch('districtId', formInstance);
 
   const categoriesQuery = CategoriesHooks.useFindInfinite({
     options: { limit: 20, searchTerm: categorySearchTerm, isActive: 'true' },
@@ -60,6 +67,18 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
     options: { limit: 20, searchTerm: publishedByUserSearchTerm, isActive: 'true' },
   });
 
+  const divisionsQuery = LocationsHooks.useFindInfinite({
+    options: { limit: 20, searchTerm: divisionSearchTerm, isActive: 'true', type: 'division' },
+  });
+
+  const districtsQuery = LocationsHooks.useFindInfinite({
+    options: { limit: 20, searchTerm: districtSearchTerm, isActive: 'true', type: 'district', parentId: divisionId || undefined },
+  });
+
+  const upazillasQuery = LocationsHooks.useFindInfinite({
+    options: { limit: 20, searchTerm: upazillaSearchTerm, isActive: 'true', type: 'upazilla', parentId: districtId || undefined },
+  });
+
   useEffect(() => {
     formInstance.resetFields();
 
@@ -74,6 +93,10 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       createdById: undefined,
       updatedById: undefined,
       publishedById: undefined,
+      locationId: undefined,
+      divisionId: undefined,
+      districtId: undefined,
+      upazillaId: undefined,
       dateRange: [],
       ...initialValues,
     };
@@ -273,6 +296,62 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
                   })}
                   onChangeSearchTerm={(searchTerm) => setPublishedByUserSearchTerm(searchTerm)}
                   query={publishedByUsersQuery}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={24}>
+              <Form.Item name="divisionId" label="Division" className="!mb-0">
+                <InfiniteScrollSelect<ILocation>
+                  allowClear
+                  showSearch
+                  virtual={false}
+                  placeholder="Filter by Division"
+                  option={({ item: location }) => ({
+                    key: location?.id,
+                    label: `${location?.name} (${location?.nameBn})`,
+                    value: location?.id,
+                  })}
+                  onChangeSearchTerm={(searchTerm) => setDivisionSearchTerm(searchTerm)}
+                  query={divisionsQuery}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={24}>
+              <Form.Item name="districtId" label="District" className="!mb-0">
+                <InfiniteScrollSelect<ILocation>
+                  allowClear
+                  showSearch
+                  virtual={false}
+                  placeholder="Filter by District"
+                  option={({ item: location }) => ({
+                    key: location?.id,
+                    label: `${location?.name} (${location?.nameBn})`,
+                    value: location?.id,
+                  })}
+                  onChangeSearchTerm={(searchTerm) => setDistrictSearchTerm(searchTerm)}
+                  query={districtsQuery}
+                  disabled={!divisionId}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={24}>
+              <Form.Item name="upazillaId" label="Upazilla" className="!mb-0">
+                <InfiniteScrollSelect<ILocation>
+                  allowClear
+                  showSearch
+                  virtual={false}
+                  placeholder="Filter by Upazilla"
+                  option={({ item: location }) => ({
+                    key: location?.id,
+                    label: `${location?.name} (${location?.nameBn})`,
+                    value: location?.id,
+                  })}
+                  onChangeSearchTerm={(searchTerm) => setUpazillaSearchTerm(searchTerm)}
+                  query={upazillasQuery}
+                  disabled={!districtId}
                 />
               </Form.Item>
             </Col>
