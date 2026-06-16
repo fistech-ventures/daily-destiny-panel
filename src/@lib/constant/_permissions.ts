@@ -95,4 +95,9 @@ export const Permissions = {
   LOCATIONS_WRITE: 'locations:write',
   LOCATIONS_UPDATE: 'locations:update',
   LOCATIONS_DELETE: 'locations:delete',
+
+  EPAPERS_READ: 'epapers:read',
+  EPAPERS_WRITE: 'epapers:write',
+  EPAPERS_UPDATE: 'epapers:update',
+  EPAPERS_DELETE: 'epapers:delete',
 } as const;

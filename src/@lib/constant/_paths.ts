@@ -81,6 +81,10 @@ export const Paths = {
       root: '/admin/locations',
       list: '/admin/locations/list',
     },
+    epapers: {
+      root: '/admin/epapers',
+      list: '/admin/epapers/list',
+    },
     cms: {
       root: '/admin/cms',
       menus: {

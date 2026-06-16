@@ -16,6 +16,7 @@ import { CiCircleList } from "react-icons/ci";
 import { GrUserAdmin } from "react-icons/gr";
 import { TiInputChecked } from "react-icons/ti";
 import {
+  MdNewspaper,
   MdOutlineFeaturedVideo,
   MdLabelImportantOutline,
 } from "react-icons/md";
@@ -345,6 +346,20 @@ const AdminMenu: React.FC<IProps> = ({
             ),
           },
           allowedAccess: ["locations:read"],
+        }),
+        getContentAccess({
+          content: {
+            key: Paths.admin.epapers.list,
+            icon: <MdNewspaper />,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.epapers.list)}
+              >
+                E-Papers
+              </CustomLink>
+            ),
+          },
+          allowedAccess: ["epapers:read"],
         }),
         getContentAccess({
           content: {
