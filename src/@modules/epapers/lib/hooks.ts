@@ -165,4 +165,16 @@ export const EpapersHooks = {
       ...config,
     });
   },
+
+  useAddPagesToExisting: ({ config }: { config?: MutationConfig<typeof EpapersServices.addPagesToExisting> } = {}) => {
+    return useMutation({
+      mutationFn: EpapersServices.addPagesToExisting,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [EpapersServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

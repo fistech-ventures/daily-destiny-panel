@@ -120,4 +120,13 @@ export const EpapersServices = {
       throw responseHandlerFn(error);
     }
   },
+
+  addPagesToExisting: async (payload: IEpaperBulkUploadPayload): Promise<IBaseResponse<null>> => {
+    try {
+      const res = await AxiosSecureInstance.post(`${END_POINT}/add-pages`, Toolbox.toNullifyTraverse(payload));
+      return Promise.resolve(res?.data);
+    } catch (error) {
+      throw responseHandlerFn(error);
+    }
+  },
 };

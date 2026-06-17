@@ -9,6 +9,9 @@ interface IProps {
   isLoading: boolean;
   form: FormInstance;
   onFinish: (values: IEpaperBulkUploadPayload) => void;
+  onAddPages?: (values: IEpaperBulkUploadPayload) => void;
+  existingPagesCount?: number;
+  onDateChange?: (date: any) => void;
 }
 
 interface PageFormData {
@@ -27,13 +30,16 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
   isLoading,
   form,
   onFinish,
+  onAddPages,
+  existingPagesCount = 0,
+  onDateChange,
 }) => {
   const [pages, setPages] = useState<PageFormData[]>([
-    { pageNumber: 1, title: "" },
+    { pageNumber: existingPagesCount + 1, title: "" },
   ]);
 
   const addPage = () => {
-    const newPageNumber = pages.length + 1;
+    const newPageNumber = pages.length + existingPagesCount + 1;
     setPages([...pages, { pageNumber: newPageNumber, title: "" }]);
   };
 
@@ -43,7 +49,7 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
       // Renumber pages
       const renumberedPages = updatedPages.map((page, i) => ({
         ...page,
-        pageNumber: i + 1,
+        pageNumber: i + existingPagesCount + 1,
       }));
       setPages(renumberedPages);
     }
@@ -75,7 +81,12 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
         fileSize: page.fileSize || 0,
       })),
     };
-    onFinish(payload);
+
+    if (existingPagesCount > 0 && onAddPages) {
+      onAddPages(payload);
+    } else {
+      onFinish(payload);
+    }
   };
 
   return (
@@ -90,9 +101,13 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
           <Form.Item
             name="date"
             rules={[{ required: true, message: "Date is required!" }]}
-            className="!mb-0"
+            className="mb-0!"
           >
-            <DatePicker placeholder="Date" className="w-full" />
+            <DatePicker 
+              placeholder="Date" 
+              className="w-full" 
+              onChange={onDateChange}
+            />
           </Form.Item>
         </Col>
 
@@ -165,9 +180,9 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
         ))}
 
         <Col xs={24}>
-          <Form.Item className="text-right !mb-0">
+          <Form.Item className="text-right mb-0!">
             <Button loading={isLoading} type="primary" htmlType="submit">
-              Bulk Upload
+              {existingPagesCount > 0 ? 'Add Pages' : 'Bulk Upload'}
             </Button>
           </Form.Item>
         </Col>

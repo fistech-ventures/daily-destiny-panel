@@ -4,9 +4,13 @@ import type { PaginationProps, TableColumnsType } from "antd";
 import { Button, Drawer, Form, Image, message, Table } from "antd";
 import React, { useState } from "react";
 import { AiFillEdit } from "react-icons/ai";
+import { FaPlus } from "react-icons/fa";
 import { EpapersHooks } from "../lib/hooks";
+import { EpapersServices } from "../lib/services";
 import { IEpaper } from "../lib/interfaces";
 import EpapersForm from "./EpapersForm";
+import EpapersBulkUploadForm from "./EpapersBulkUploadForm";
+import dayjs from "dayjs";
 
 interface IProps {
   isLoading: boolean;
@@ -17,7 +21,10 @@ interface IProps {
 const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
   const [messageApi, messageHolder] = message.useMessage();
   const [updateItem, setUpdateItem] = useState<IEpaper>(null);
+  const [editPaperItem, setEditPaperItem] = useState<IEpaper>(null);
   const [formInstance] = Form.useForm();
+  const [editFormInstance] = Form.useForm();
+  const [existingPagesCount, setExistingPagesCount] = useState(0);
 
   const epaperUpdateFn = EpapersHooks.useUpdate({
     config: {
@@ -32,6 +39,47 @@ const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       },
     },
   });
+
+  const epaperAddPagesFn = EpapersHooks.useAddPagesToExisting({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+
+        setEditPaperItem(null);
+        setExistingPagesCount(0);
+        editFormInstance.resetFields();
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const handleEditPaper = async (item: IEpaper) => {
+    setEditPaperItem(item);
+    try {
+      const existingPages = await EpapersServices.findPagesByDate(item.date, item.publicationName);
+      setExistingPagesCount(existingPages?.data?.length || 0);
+      editFormInstance.setFieldsValue({ date: dayjs(item.date) });
+    } catch {
+      setExistingPagesCount(0);
+    }
+  };
+
+  const handleEditDateChange = async (date: any) => {
+    if (date && editPaperItem) {
+      try {
+        const dateStr = dayjs(date).format('YYYY-MM-DD');
+        const existingPages = await EpapersServices.findPagesByDate(dateStr, editPaperItem.publicationName);
+        setExistingPagesCount(existingPages?.data?.length || 0);
+      } catch {
+        setExistingPagesCount(0);
+      }
+    } else {
+      setExistingPagesCount(0);
+    }
+  };
 
   // const epaperDeleteFn = EpapersHooks.useDelete({
   //   config: {
@@ -128,18 +176,30 @@ const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       dataIndex: "id",
       title: "Action",
       align: "center",
-      width: 100,
-      render: (id) => (
-        <Button
-          onClick={() => {
-            getAccess(["epapers:update"], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
+      width: 150,
+      render: (id, _record) => (
+        <div className="flex gap-2 justify-center">
+          <Button
+            onClick={() => {
+              getAccess(["epapers:update"], () => {
+                const item = data?.find((item) => item.id === id);
+                setUpdateItem(item);
+              });
+            }}
+          >
+            <AiFillEdit />
+          </Button>
+          <Button
+            onClick={() => {
+              getAccess(["epapers:update"], () => {
+                const item = data?.find((item) => item.id === id);
+                handleEditPaper(item);
+              });
+            }}
+          >
+            <FaPlus />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -172,9 +232,32 @@ const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
           onFinish={(values) =>
             epaperUpdateFn.mutate({
               id: updateItem?.id,
-              data: values,
+              data: {
+                ...values,
+                date: values.date ? dayjs(values.date).format('YYYY-MM-DD') : values.date,
+              },
             })
           }
+        />
+      </Drawer>
+      <Drawer
+        width={800}
+        title={`Add Pages to Paper - ${editPaperItem?.date}`}
+        open={!!editPaperItem?.id}
+        onClose={() => {
+          setEditPaperItem(null);
+          setExistingPagesCount(0);
+          editFormInstance.resetFields();
+        }}
+        destroyOnClose
+      >
+        <EpapersBulkUploadForm
+          form={editFormInstance}
+          isLoading={epaperAddPagesFn.isPending}
+          onFinish={(values) => epaperAddPagesFn.mutate(values)}
+          onAddPages={(values) => epaperAddPagesFn.mutate(values)}
+          existingPagesCount={existingPagesCount}
+          onDateChange={handleEditDateChange}
         />
       </Drawer>
     </React.Fragment>
