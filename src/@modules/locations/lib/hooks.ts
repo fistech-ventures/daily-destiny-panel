@@ -47,8 +47,14 @@ export const LocationsHooks = {
       getNextPageParam: (lastPage, allPages) => {
         if (!lastPage?.meta) return null;
 
-        const totalFetched = allPages.reduce((count, page) => count + page.data.length, 0);
-        return totalFetched < lastPage.meta.total ? lastPage.meta.page + 1 : null;
+        const total = Number(lastPage.meta.total) || 0;
+        const limit = Number(lastPage.meta.limit) || 20;
+        
+        // Calculate next page based on pages already fetched instead of relying on API's page number
+        const currentPage = allPages.length;
+        const maxPages = Math.ceil(total / limit);
+        
+        return currentPage < maxPages ? currentPage + 1 : null;
       },
       ...rest,
     });

@@ -24,14 +24,27 @@ const locationTypes = [
   { label: 'Pourashava', value: 'pourosova' },
 ];
 
+// Mapping of location type to its parent type
+const locationTypeToParentType: Record<string, string> = {
+  division: 'country',
+  district: 'division',
+  upazilla: 'district',
+  union: 'upazilla',
+  city_corporation: 'district',
+  pourosova: 'upazilla',
+};
+
 const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
   const [locationSearchTerm, setLocationSearchTerm] = useState<string | null>(null);
   const formValues = Form.useWatch([], form);
 
+  // Get the parent type based on selected location type
+  const parentType = formValues?.type ? locationTypeToParentType[formValues.type] : null;
+
   const parentQuery = LocationsHooks.useFindById({
     id: formValues?.parentId,
     config: {
-      queryKey: [],
+      queryKey: ['location', formValues?.parentId],
       enabled: !!formValues?.parentId,
     },
   });
@@ -41,12 +54,24 @@ const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create',
       limit: 20,
       searchTerm: locationSearchTerm,
       isActive: 'true',
+      type: parentType,
+    },
+    config: {
+      queryKey: ['parent-locations', parentType, locationSearchTerm],
+      enabled: !!parentType,
     },
   });
 
   useEffect(() => {
     form.resetFields();
   }, [form, initialValues]);
+
+  // Clear parentId when type changes to avoid invalid parent references
+  useEffect(() => {
+    if (formValues?.type && !locationTypeToParentType[formValues.type]) {
+      form.setFieldValue('parentId', undefined);
+    }
+  }, [formValues?.type, form]);
 
   return (
     <React.Fragment>
@@ -99,7 +124,7 @@ const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create',
                 })}
                 onChangeSearchTerm={(searchTerm) => setLocationSearchTerm(searchTerm)}
                 query={parentLocationsQuery}
-                disabled={!formValues?.type}
+                disabled={!parentType}
               />
             </Form.Item>
           </Col>
