@@ -1,4 +1,4 @@
-import { IBaseEntity, IBaseFilter, IBaseResponse, ISEOMetaData, TId } from '@base/interfaces';
+import { IBaseEntity, IBaseFilter, IBaseResponse, TId } from '@base/interfaces';
 import { ICategory } from '@modules/categories/lib/interfaces';
 
 export interface ISubCategoriesFilter extends IBaseFilter {
@@ -12,7 +12,6 @@ export interface ISubCategory extends IBaseEntity {
   position: string;
   categoryId: TId;
   category: ICategory;
-  seoMetaData: ISEOMetaData;
 }
 
 export interface ISubCategoriesResponse extends IBaseResponse {
@@ -26,8 +25,4 @@ export interface ISubCategoryCreate {
   position: string;
   categoryId: TId;
   isActive: boolean;
-  metaTitle?: string;
-  metaDescription?: string;
-  metaKeywords?: string[];
-  metaImage: string;
 }

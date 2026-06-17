@@ -18,12 +18,6 @@ interface IProps {
 const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
   const [categorySearchTerm, setCategorySearchTerm] = useState(null);
   const formValues = Form.useWatch([], form);
-  
-  const handleMetaKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const keywords = value.split(',').map((keyword) => keyword.trim());
-    form.setFieldsValue({ metaKeywords: keywords });
-  };
 
   const categoryQuery = CategoriesHooks.useFindById({
     id: formValues?.categoryId,
@@ -54,9 +48,6 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
         form={form}
         initialValues={{
           ...initialValues,
-          metaTitle: initialValues?.metaTitle,
-          metaDescription: initialValues?.metaDescription,
-          metaKeywords: initialValues?.metaKeywords,
         }}
         onFinish={onFinish}
       >
@@ -70,7 +61,7 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
                   message: 'Category is required!',
                 },
               ]}
-              className="!mb-0"
+              className="mb-0!"
             >
               <InfiniteScrollSelect<ICategory>
                 isFloat
@@ -89,8 +80,8 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
               />
             </Form.Item>
           </Col>
-          <Col xs={24} className="!mb-0">
-            <Form.Item name="title" rules={[{ required: true, message: 'Title is required!' }]} className="!mb-0">
+          <Col xs={24} className="mb-0!">
+            <Form.Item name="title" rules={[{ required: true, message: 'Title is required!' }]} className="mb-0!">
               <FloatInput
                 placeholder="Title"
                 onKeyUp={(e) =>
@@ -99,44 +90,25 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
               />
             </Form.Item>
           </Col>
-          <Col xs={24} className="!mb-0">
-            <Form.Item name="titleBn" rules={[{ required: true, message: 'Title is required!' }]} className="!mb-0">
+          <Col xs={24} className="mb-0!">
+            <Form.Item name="titleBn" rules={[{ required: true, message: 'Title is required!' }]} className="mb-0!">
               <FloatInput
                 placeholder="Title Bn"
               />
             </Form.Item>
           </Col>
-          <Col xs={24}>
-            <Form.Item
-              name="metaTitle"
-              rules={[{ required: true, message: 'Meta Title is required!' }]}
-              className="!mb-0"
-            >
-              <FloatInput placeholder="Meta Title" />
-            </Form.Item>
-          </Col>
-          <Col xs={24}>
-            <Form.Item name="metaDescription" className="!mb-0">
-              <FloatInput placeholder="Meta Description" />
-            </Form.Item>
-          </Col>
-          <Col xs={24}>
-            <Form.Item name="metaKeywords" className="!mb-0">
-              <FloatInput onChange={handleMetaKeywordsChange} placeholder="Meta Keywords (comma separated)" />
-            </Form.Item>
-          </Col>
-          <Col xs={24} className="!mb-0">
-            <Form.Item name="slug" className="!mb-0">
+          <Col xs={24} className="mb-0!">
+            <Form.Item name="slug" className="mb-0!">
               <FloatInput placeholder="Slug" />
             </Form.Item>
           </Col>
           <Col xs={24}>
-            <Form.Item name="position" rules={[{ required: false }]} className="!mb-0">
+            <Form.Item name="position" rules={[{ required: false }]} className="mb-0!">
               <FloatInput placeholder="Position" />
             </Form.Item>
           </Col>
           <Col xs={24}>
-            <Form.Item name="isActive" className="!mb-0">
+            <Form.Item name="isActive" className="mb-0!">
               <Radio.Group buttonStyle="solid" className="w-full text-center">
                 <Radio.Button className="w-1/2" value={true}>
                   Active
@@ -148,7 +120,7 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
             </Form.Item>
           </Col>
           <Col xs={24}>
-            <Form.Item className="text-right !mb-0">
+            <Form.Item className="text-right mb-0!">
               <Button loading={isLoading} type="primary" htmlType="submit">
                 {formType === 'create' ? 'Submit' : 'Update'}
               </Button>

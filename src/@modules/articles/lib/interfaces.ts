@@ -102,7 +102,7 @@ export interface IArticleCreate {
   upazillaId?: TId;
   isActive: boolean;
   medias?: IMedia[];
-  tags: string[];
+  tags?: string[];
   metaTitle: string;
   metaDescription: string;
   coverImageCredit: string;

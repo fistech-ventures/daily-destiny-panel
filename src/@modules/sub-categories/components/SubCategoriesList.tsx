@@ -92,9 +92,6 @@ const SubCategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta
     categoryTitle: `${elem?.category?.title} (${elem?.category?.titleBn})`,
     isActive: elem?.isActive,
     position: elem?.position,
-    metaTitle: elem?.seoMetaData?.title,
-    metaDescription: elem?.seoMetaData?.description,
-    metaKeyword: elem?.seoMetaData?.keywords,
     createdAt: elem?.createdAt,
     createdBy: elem?.createdBy?.fullName,
     updatedAt: elem?.updatedAt,
@@ -197,10 +194,6 @@ const SubCategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta
           initialValues={{
             ...updateItem,
             isActive: updateItem?.isActive,
-            metaTitle: updateItem?.seoMetaData?.title,
-            metaDescription: updateItem?.seoMetaData?.description,
-            metaKeywords: updateItem?.seoMetaData?.keywords,
-            metaImage: updateItem?.seoMetaData?.image,
           }}
           isLoading={subCategoryUpdateFn.isPending}
           onFinish={(values) =>
