@@ -27,6 +27,7 @@ const LocationsPage = () => {
       ...rest,
       page,
       limit,
+      
     },
   });
 

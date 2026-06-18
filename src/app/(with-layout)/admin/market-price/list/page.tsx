@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import BaseSearch from '@base/components/BaseSearch';
-import PageHeader from '@base/components/PageHeader';
-import { Toolbox } from '@lib/utils';
-import Authorization from '@modules/auth/components/Authorization';
-import WithAuthorization from '@modules/auth/components/WithAuthorization';
-import MarketPricesFilter from '@modules/market-prices/components/MarketPricesFilter';
-import MarketPricesForm from '@modules/market-prices/components/MarketPricesForm';
-import MarketPricesList from '@modules/market-prices/components/MarketPricesList';
-import { MarketPricesHooks } from '@modules/market-prices/lib/hooks';
-import { IMarketPricesFilter } from '@modules/market-prices/lib/interfaces';
-import { Button, Drawer, Form, message, Tag } from 'antd';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import BaseSearch from "@base/components/BaseSearch";
+import PageHeader from "@base/components/PageHeader";
+import { Toolbox } from "@lib/utils";
+import Authorization from "@modules/auth/components/Authorization";
+import WithAuthorization from "@modules/auth/components/WithAuthorization";
+import MarketPricesFilter from "@modules/market-prices/components/MarketPricesFilter";
+import MarketPricesForm from "@modules/market-prices/components/MarketPricesForm";
+import MarketPricesList from "@modules/market-prices/components/MarketPricesList";
+import { MarketPricesHooks } from "@modules/market-prices/lib/hooks";
+import { IMarketPricesFilter } from "@modules/market-prices/lib/interfaces";
+import { Button, Drawer, Form, message, Tag } from "antd";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
 
 const MarketPricesPage = () => {
   const router = useRouter();
@@ -24,13 +24,16 @@ const MarketPricesPage = () => {
     page = 1,
     limit = 10,
     ...rest
-  } = Toolbox.parseQueryParams<IMarketPricesFilter>(`?${searchParams.toString()}`);
+  } = Toolbox.parseQueryParams<IMarketPricesFilter>(
+    `?${searchParams.toString()}`,
+  );
 
   const marketPricesQuery = MarketPricesHooks.useFind({
     options: {
       ...rest,
       page,
       limit,
+      sortBy: "position",
     },
   });
 
@@ -46,7 +49,7 @@ const MarketPricesPage = () => {
         messageApi.success(res.message);
       },
       onError: (error: any) => {
-        messageApi.error(error?.message || 'Failed to create market price');
+        messageApi.error(error?.message || "Failed to create market price");
       },
     },
   });
@@ -57,9 +60,11 @@ const MarketPricesPage = () => {
       <PageHeader
         title="Market Prices"
         subTitle={<BaseSearch />}
-        tags={[<Tag key={1}>Total: {marketPricesQuery.data?.meta?.total || 0}</Tag>]}
+        tags={[
+          <Tag key={1}>Total: {marketPricesQuery.data?.meta?.total || 0}</Tag>,
+        ]}
         extra={
-          <Authorization allowedAccess={['market-prices:write']}>
+          <Authorization allowedAccess={["market-prices:write"]}>
             <Button type="primary" onClick={() => setDrawerOpen(true)}>
               Create
             </Button>
@@ -67,9 +72,14 @@ const MarketPricesPage = () => {
         }
       />
       <MarketPricesFilter
-        initialValues={Toolbox.toCleanObject(Object.fromEntries(searchParams.entries()))}
+        initialValues={Toolbox.toCleanObject(
+          Object.fromEntries(searchParams.entries()),
+        )}
         onChange={(values) => {
-          const params = Toolbox.toCleanObject({ ...Object.fromEntries(searchParams.entries()), ...values });
+          const params = Toolbox.toCleanObject({
+            ...Object.fromEntries(searchParams.entries()),
+            ...values,
+          });
           const queryString = new URLSearchParams(params as any).toString();
           router.push(`?${queryString}`);
         }}
@@ -82,7 +92,11 @@ const MarketPricesPage = () => {
           pageSize: limit,
           total: marketPricesQuery.data?.meta?.total,
           onChange: (page, limit) => {
-            const params = Toolbox.toCleanObject({ ...Object.fromEntries(searchParams.entries()), page, limit });
+            const params = Toolbox.toCleanObject({
+              ...Object.fromEntries(searchParams.entries()),
+              page,
+              limit,
+            });
             const queryString = new URLSearchParams(params as any).toString();
             router.push(`?${queryString}`);
           },
@@ -105,4 +119,6 @@ const MarketPricesPage = () => {
   );
 };
 
-export default WithAuthorization(MarketPricesPage, { allowedAccess: ['market-prices:read'] });
+export default WithAuthorization(MarketPricesPage, {
+  allowedAccess: ["market-prices:read"],
+});

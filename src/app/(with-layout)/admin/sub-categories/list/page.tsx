@@ -27,6 +27,7 @@ const SubCategoriesPage = () => {
       ...rest,
       page,
       limit,
+      sortBy: "position",
     },
   });
 
