@@ -71,4 +71,16 @@ export const PollsHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof PollsServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: PollsServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [PollsServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

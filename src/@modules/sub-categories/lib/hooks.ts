@@ -77,4 +77,16 @@ export const SubCategoriesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof SubCategoriesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: SubCategoriesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [SubCategoriesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

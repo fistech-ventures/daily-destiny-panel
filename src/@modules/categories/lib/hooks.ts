@@ -78,6 +78,18 @@ export const CategoriesHooks = {
     });
   },
 
+  useDelete: ({ config }: { config?: MutationConfig<typeof CategoriesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: CategoriesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [CategoriesServices.NAME] });
+      },
+      ...config,
+    });
+  },
+
   useFindTags: ({
     options,
     config,

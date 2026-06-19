@@ -4,7 +4,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { MenusHooks } from '../lib/hooks';
 import { IMenu } from '../lib/interfaces';
 import MenusForm from './MenusForm';
@@ -35,6 +35,18 @@ const MenusList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const menuDeleteFn = MenusHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -93,18 +105,40 @@ const MenusList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       dataIndex: 'id',
       title: 'Action',
       align: 'center',
-      render: (id) => (
-        <Button
-          onClick={() => {
-            getAccess(['cms-menus:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <Button
+              onClick={() => {
+                getAccess(['cms-menus:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['cms-menus:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Menu',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      menuDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

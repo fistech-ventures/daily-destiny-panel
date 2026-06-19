@@ -5,7 +5,7 @@ import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, message, Table } from 'antd';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { PermissionTypesHooks } from '../lib/hooks';
 import { IPermissionType } from '../lib/interfaces';
 import PermissionTypesForm from './PermissionTypesForm';
@@ -36,6 +36,18 @@ const PermissionTypesList: React.FC<IProps> = ({ isLoading, data, pagination }) 
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const permissionTypeDeleteFn = PermissionTypesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -96,19 +108,41 @@ const PermissionTypesList: React.FC<IProps> = ({ isLoading, data, pagination }) 
       key: 'id',
       dataIndex: 'id',
       title: 'Action',
-      render: (id) => (
-        <Button
-          type="primary"
-          onClick={() => {
-            getAccess(['role-manager-permission-types:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button
+              type="primary"
+              onClick={() => {
+                getAccess(['role-manager-permission-types:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['role-manager-permission-types:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Permission Type',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      permissionTypeDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

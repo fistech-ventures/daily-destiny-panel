@@ -5,7 +5,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { CategoriesHooks } from '../lib/hooks';
 import { ICategory } from '../lib/interfaces';
 import CategoriesForm from './CategoriesForm';
@@ -47,6 +47,18 @@ const CategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta })
         if (!isBulkUpdateRef.current) {
           messageApi.success(res.message);
         }
+      },
+    },
+  });
+
+  const categoryDeleteFn = CategoriesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+        messageApi.success(res.message);
       },
     },
   });
@@ -160,16 +172,38 @@ const CategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta })
       title: 'Action',
       align: 'center',
       render: (id) => {
-        return <Button
-          onClick={() => {
-            getAccess(['categories:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>;
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <Button
+              onClick={() => {
+                getAccess(['categories:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['categories:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Category',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      categoryDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
       },
     },
   ];

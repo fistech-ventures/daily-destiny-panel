@@ -7,7 +7,7 @@ import { Button, Drawer, Form, message, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { PermissionsHooks } from '../lib/hooks';
 import { IPermission } from '../lib/interfaces';
 import PermissionsFilter from './PermissionsFilter';
@@ -41,6 +41,18 @@ const PermissionsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const permissionDeleteFn = PermissionsHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -107,19 +119,41 @@ const PermissionsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       key: 'id',
       dataIndex: 'id',
       title: 'Action',
-      render: (id) => (
-        <Button
-          type="primary"
-          onClick={() => {
-            getAccess(['role-manager-permissions:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button
+              type="primary"
+              onClick={() => {
+                getAccess(['role-manager-permissions:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['role-manager-permissions:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Permission',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      permissionDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

@@ -71,4 +71,16 @@ export const AdsHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof AdsServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: AdsServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [AdsServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

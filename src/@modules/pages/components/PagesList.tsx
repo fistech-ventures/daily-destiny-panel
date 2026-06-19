@@ -4,7 +4,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { PagesHooks } from '../lib/hooks';
 import { IPage } from '../lib/interfaces';
 import PagesForm from './PagesForm';
@@ -35,6 +35,18 @@ const PagesList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const pageDeleteFn = PagesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -93,18 +105,40 @@ const PagesList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       dataIndex: 'id',
       title: 'Action',
       align: 'center',
-      render: (id) => (
-        <Button
-          onClick={() => {
-            getAccess(['cms-pages:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <Button
+              onClick={() => {
+                getAccess(['cms-pages:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['cms-pages:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Page',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      pageDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

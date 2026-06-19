@@ -1,4 +1,4 @@
-import { TId } from '@base/interfaces';
+import { IBaseResponse, TId } from '@base/interfaces';
 import { AxiosSecureInstance } from '@lib/config';
 import { TPermission } from '@lib/constant';
 import { responseHandlerFn, Toolbox } from '@lib/utils';
@@ -39,6 +39,15 @@ export const PermissionsServices = {
   bulkSync: async (payload: { permissions: TPermission[] }): Promise<IPermissionsResponse> => {
     try {
       const res = await AxiosSecureInstance.post(`${END_POINT}/bulk-sync`, payload);
+      return Promise.resolve(res?.data);
+    } catch (error) {
+      throw responseHandlerFn(error);
+    }
+  },
+
+  delete: async (id: TId): Promise<IBaseResponse<null>> => {
+    try {
+      const res = await AxiosSecureInstance.delete(`${END_POINT}/${id}`);
       return Promise.resolve(res?.data);
     } catch (error) {
       throw responseHandlerFn(error);

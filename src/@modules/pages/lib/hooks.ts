@@ -81,4 +81,16 @@ export const PagesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof PagesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: PagesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [PagesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

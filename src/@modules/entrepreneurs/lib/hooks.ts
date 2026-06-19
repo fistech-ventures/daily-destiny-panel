@@ -77,4 +77,16 @@ export const EntrepreneursHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof EntrepreneursServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: EntrepreneursServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [EntrepreneursServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

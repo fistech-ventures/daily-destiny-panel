@@ -7,7 +7,7 @@ import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Form, Table, Tag, message, Dropdown, Image } from 'antd';
 import dayjs from 'dayjs';
 import React, { useRef, useState } from 'react';
-import { AiFillEdit, AiOutlineEye } from 'react-icons/ai';
+import { AiFillEdit, AiOutlineEye, AiFillDelete } from 'react-icons/ai';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import { ENUM_ARTICLES_STATUS_TYPES } from '../lib/enums';
 import { ArticlesHooks } from '../lib/hooks';
@@ -114,6 +114,18 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
         if (!isBulkUpdateRef.current) {
           messageApi.success(res.message);
         }
+      },
+    },
+  });
+
+  const articleDeleteFn = ArticlesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+        messageApi.success(res.message);
       },
     },
   });
@@ -395,6 +407,28 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
             onClick: () => {
               getAccess(['articles:change-status'], () => {
                 setUpdateStatusItem(item);
+              });
+            },
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <AiFillDelete />,
+            onClick: () => {
+              getAccess(['articles:delete'], () => {
+                if (item.status === ENUM_ARTICLES_STATUS_TYPES.Published) {
+                  messageApi.warning('Published article can\'t be deleted. Make it drafted or archived to delete.');
+                  return;
+                }
+                setConfirmationDialog({
+                  open: true,
+                  title: 'Delete Article',
+                  content: `Are you sure you want to delete "${item.title}"?`,
+                  onConfirm: () => {
+                    articleDeleteFn.mutate(item.id);
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                  },
+                });
               });
             },
           },

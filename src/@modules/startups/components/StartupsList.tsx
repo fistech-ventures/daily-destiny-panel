@@ -4,7 +4,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { StartupsHooks } from '../lib/hooks';
 import { IStartup } from '../lib/interfaces';
 import StartupsForm from './StartupsForm';
@@ -35,6 +35,18 @@ const StartupsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const startupDeleteFn = StartupsHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -114,18 +126,40 @@ const StartupsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       dataIndex: 'id',
       title: 'Action',
       align: 'center',
-      render: (id) => (
-        <Button
-          onClick={() => {
-            getAccess(['startups:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <Button
+              onClick={() => {
+                getAccess(['startups:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['startups:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Startup',
+                    content: `Are you sure you want to delete "${item.name}"?`,
+                    onConfirm: () => {
+                      startupDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

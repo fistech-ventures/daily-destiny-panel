@@ -450,7 +450,7 @@ const ArticlesForm: React.FC<IProps> = ({
                 initialOptions={categoryQuery.data?.data?.id ? [categoryQuery.data?.data] : []}
                 option={({ item: category }) => ({
                   key: category?.id,
-                  label: category?.title,
+                  label: `${category?.title} (${category?.titleBn})`,
                   value: category?.id,
                 })}
                 onChangeSearchTerm={(searchTerm) => setCategorySearchTerm(searchTerm)}

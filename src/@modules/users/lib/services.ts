@@ -55,4 +55,13 @@ export const UsersServices = {
       throw responseHandlerFn(error);
     }
   },
+
+  delete: async (id: TId): Promise<IBaseResponse<null>> => {
+    try {
+      const res = await AxiosSecureInstance.delete(`${END_POINT}/${id}`);
+      return Promise.resolve(res?.data);
+    } catch (error) {
+      throw responseHandlerFn(error);
+    }
+  },
 };

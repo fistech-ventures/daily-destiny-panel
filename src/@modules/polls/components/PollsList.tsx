@@ -5,7 +5,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Space, Table, Tag, message } from 'antd';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { ENUM_POLLS_STATUS_TYPES } from '../lib/enums';
 import { PollsHooks } from '../lib/hooks';
 import { IPoll } from '../lib/interfaces';
@@ -40,6 +40,18 @@ const PollsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
 
         setUpdateItem(null);
         setUpdateStatusItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const pollDeleteFn = PollsHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -121,30 +133,49 @@ const PollsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       dataIndex: 'id',
       title: 'Action',
       align: 'center',
-      render: (id) => (
-        <Space>
-          <Button
-            onClick={() => {
-              getAccess(['polls:update'], () => {
-                const item = data?.find((item) => item.id === id);
-                setUpdateStatusItem(item);
-              });
-            }}
-          >
-            Change Status
-          </Button>
-          <Button
-            onClick={() => {
-              getAccess(['polls:update'], () => {
-                const item = data?.find((item) => item.id === id);
-                setUpdateItem(item);
-              });
-            }}
-          >
-            <AiFillEdit />
-          </Button>
-        </Space>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <Space>
+            <Button
+              onClick={() => {
+                getAccess(['polls:update'], () => {
+                  setUpdateStatusItem(item);
+                });
+              }}
+            >
+              Change Status
+            </Button>
+            <Button
+              onClick={() => {
+                getAccess(['polls:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['polls:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Poll',
+                    content: `Are you sure you want to delete "${item.statement}"?`,
+                    onConfirm: () => {
+                      pollDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 

@@ -77,4 +77,16 @@ export const MarketPricesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof MarketPricesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: MarketPricesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [MarketPricesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

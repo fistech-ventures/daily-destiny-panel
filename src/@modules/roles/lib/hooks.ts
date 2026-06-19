@@ -122,4 +122,16 @@ export const RolesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof RolesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: RolesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [RolesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

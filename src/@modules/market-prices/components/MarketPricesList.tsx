@@ -4,7 +4,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { MarketPricesHooks } from '../lib/hooks';
 import { IMarketPrice } from '../lib/interfaces';
 import MarketPricesForm from './MarketPricesForm';
@@ -39,6 +39,21 @@ const MarketPricesList: React.FC<IProps> = ({ isLoading, data, pagination }) => 
       },
       onError: (error: any) => {
         messageApi.error(error?.message || 'Failed to update market price');
+      },
+    },
+  });
+
+  const deleteMutation = MarketPricesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+        messageApi.success(res.message);
+      },
+      onError: (error: any) => {
+        messageApi.error(error?.message || 'Failed to delete market price');
       },
     },
   });
@@ -111,20 +126,40 @@ const MarketPricesList: React.FC<IProps> = ({ isLoading, data, pagination }) => 
       key: 'action',
       title: 'Action',
       align: 'center',
-      render: (_, record) => (
-        <div className="flex justify-center gap-2">
-          <Button
-            onClick={() => {
-              getAccess(['market-prices:update'], () => {
-                const item = data?.find((item) => item.id === record.id);
-                setUpdateItem(item || null);
-              });
-            }}
-          >
-            <AiFillEdit />
-          </Button>
-        </div>
-      ),
+      render: (_, record) => {
+        const item = data?.find((item) => item.id === record.id);
+        return (
+          <div className="flex justify-center gap-2">
+            <Button
+              onClick={() => {
+                getAccess(['market-prices:update'], () => {
+                  setUpdateItem(item || null);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['market-prices:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Market Price',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      deleteMutation.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

@@ -7,7 +7,7 @@ import { Button, Drawer, Form, message, Space, Table } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { RolesHooks } from '../lib/hooks';
 import { IRole } from '../lib/interfaces';
 import RolesForm from './RolesForm';
@@ -39,6 +39,18 @@ const RolesList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         }
 
         setUpdateItem(null);
+        messageApi.success(res.message);
+      },
+    },
+  });
+
+  const roleDeleteFn = RolesHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
         messageApi.success(res.message);
       },
     },
@@ -102,6 +114,7 @@ const RolesList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       title: 'Action',
       render: (id, record) => {
         const isDisabled = record?.title === Roles.SUPER_ADMIN;
+        const item = data?.find((item) => item.id === id);
 
         return (
           <Space>
@@ -123,12 +136,30 @@ const RolesList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
               type="primary"
               onClick={() => {
                 getAccess(['role-manager-roles:update'], () => {
-                  const item = data?.find((item) => item.id === id);
                   setUpdateItem(item);
                 });
               }}
             >
               <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              disabled={isDisabled}
+              onClick={() => {
+                getAccess(['role-manager-roles:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Role',
+                    content: `Are you sure you want to delete "${item.title}"?`,
+                    onConfirm: () => {
+                      roleDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
             </Button>
           </Space>
         );

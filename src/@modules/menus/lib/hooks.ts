@@ -71,4 +71,16 @@ export const MenusHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof MenusServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: MenusServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [MenusServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

@@ -71,4 +71,16 @@ export const ArticlesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof ArticlesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: ArticlesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [ArticlesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

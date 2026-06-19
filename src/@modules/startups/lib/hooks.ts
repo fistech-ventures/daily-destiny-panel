@@ -71,4 +71,16 @@ export const StartupsHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof StartupsServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: StartupsServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [StartupsServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };

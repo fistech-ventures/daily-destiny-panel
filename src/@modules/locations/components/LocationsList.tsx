@@ -5,7 +5,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Drawer, Form, Table, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import { AiFillEdit } from 'react-icons/ai';
+import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
 import { LocationsHooks } from '../lib/hooks';
 import { ILocation } from '../lib/interfaces';
 import LocationsForm from './LocationsForm';
@@ -46,6 +46,18 @@ const LocationsList: React.FC<IProps> = ({ isLoading, data, pagination, meta }) 
         if (!isBulkUpdateRef.current) {
           messageApi.success(res.message);
         }
+      },
+    },
+  });
+
+  const locationDeleteFn = LocationsHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+        messageApi.success(res.message);
       },
     },
   });
@@ -160,18 +172,40 @@ const LocationsList: React.FC<IProps> = ({ isLoading, data, pagination, meta }) 
       dataIndex: 'id',
       title: 'Action',
       align: 'center',
-      render: (id) => (
-        <Button
-          onClick={() => {
-            getAccess(['locations:update'], () => {
-              const item = data?.find((item) => item.id === id);
-              setUpdateItem(item);
-            });
-          }}
-        >
-          <AiFillEdit />
-        </Button>
-      ),
+      render: (id) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            <Button
+              onClick={() => {
+                getAccess(['locations:update'], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(['locations:delete'], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete Location',
+                    content: `Are you sure you want to delete "${item.name}"?`,
+                    onConfirm: () => {
+                      locationDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

@@ -4,7 +4,7 @@ import { getAccess } from "@modules/auth/lib/utils/client";
 import type { PaginationProps, TableColumnsType } from "antd";
 import { Button, Drawer, Form, Image, message, Table } from "antd";
 import React, { useState } from "react";
-import { AiFillEdit } from "react-icons/ai";
+import { AiFillEdit, AiFillDelete } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa";
 import { EpapersHooks } from "../lib/hooks";
 import { EpapersServices } from "../lib/services";
@@ -88,18 +88,17 @@ const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
     }
   };
 
-  // const epaperDeleteFn = EpapersHooks.useDelete({
-  //   config: {
-  //     onSuccess: (res) => {
-  //       if (!res.success) {
-  //         messageApi.error(res.message);
-  //         return;
-  //       }
-
-  //       messageApi.success(res.message);
-  //     },
-  //   },
-  // });
+  const epaperDeleteFn = EpapersHooks.useDelete({
+    config: {
+      onSuccess: (res) => {
+        if (!res.success) {
+          messageApi.error(res.message);
+          return;
+        }
+        messageApi.success(res.message);
+      },
+    },
+  });
 
   const dataSource = data?.map((elem) => ({
     key: elem?.id,
@@ -193,30 +192,49 @@ const EpapersList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       title: "Action",
       align: "center",
       width: 150,
-      render: (id, _record) => (
-        <div className="flex gap-2 justify-center">
-          <Button
-            onClick={() => {
-              getAccess(["epapers:update"], () => {
-                const item = data?.find((item) => item.id === id);
-                setUpdateItem(item);
-              });
-            }}
-          >
-            <AiFillEdit />
-          </Button>
-          <Button
-            onClick={() => {
-              getAccess(["epapers:update"], () => {
-                const item = data?.find((item) => item.id === id);
-                handleEditPaper(item);
-              });
-            }}
-          >
-            <FaPlus />
-          </Button>
-        </div>
-      ),
+      render: (id, _record) => {
+        const item = data?.find((item) => item.id === id);
+        return (
+          <div className="flex gap-2 justify-center">
+            <Button
+              onClick={() => {
+                getAccess(["epapers:update"], () => {
+                  setUpdateItem(item);
+                });
+              }}
+            >
+              <AiFillEdit />
+            </Button>
+            <Button
+              onClick={() => {
+                getAccess(["epapers:update"], () => {
+                  handleEditPaper(item);
+                });
+              }}
+            >
+              <FaPlus />
+            </Button>
+            <Button
+              danger
+              onClick={() => {
+                getAccess(["epapers:delete"], () => {
+                  setConfirmationDialog({
+                    open: true,
+                    title: 'Delete E-Paper',
+                    content: `Are you sure you want to delete e-paper from ${item.date}?`,
+                    onConfirm: () => {
+                      epaperDeleteFn.mutate(item.id);
+                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    },
+                  });
+                });
+              }}
+            >
+              <AiFillDelete />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

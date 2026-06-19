@@ -76,4 +76,16 @@ export const PermissionTypesHooks = {
       ...config,
     });
   },
+
+  useDelete: ({ config }: { config?: MutationConfig<typeof PermissionTypesServices.delete> } = {}) => {
+    return useMutation({
+      mutationFn: PermissionTypesServices.delete,
+      onSettled: (data) => {
+        if (!data?.success) return;
+
+        queryClient.invalidateQueries({ queryKey: [PermissionTypesServices.NAME] });
+      },
+      ...config,
+    });
+  },
 };
