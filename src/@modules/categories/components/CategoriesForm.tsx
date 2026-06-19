@@ -1,6 +1,6 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import { Toolbox } from '@lib/utils';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect } from 'react';
 import { ICategoryCreate } from '../lib/interfaces';
 
@@ -10,9 +10,33 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<ICategoryCreate>;
   onFinish: (values: ICategoryCreate) => void;
+  backendError?: string | null;
 }
 
-const CategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const CategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
+
   const handleMetaKeywordsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const keywords = value.split(',').map((keyword) => keyword.trim());
@@ -25,6 +49,7 @@ const CategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create'
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -37,6 +62,10 @@ const CategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create'
           metaKeywords: initialValues?.metaKeywords,
         }}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

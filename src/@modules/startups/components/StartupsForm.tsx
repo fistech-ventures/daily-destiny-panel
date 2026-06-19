@@ -8,7 +8,7 @@ import InputPhone from '@base/components/InputPhone';
 import { TId } from '@base/interfaces';
 import { Toolbox } from '@lib/utils';
 import { EntrepreneursHooks } from '@modules/entrepreneurs/lib/hooks';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { IoCalendar } from 'react-icons/io5';
@@ -20,11 +20,34 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IStartupCreate>;
   onFinish: (values: IStartupCreate) => void;
+  backendError?: string | null;
 }
 
-const StartupsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const StartupsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const formValues = Form.useWatch([], form);
   const [founderIds, setFounderIds] = useState<Record<number, TId>>({});
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const handleFinishFn = (values) => {
     const foundersDiff = Toolbox.computeArrayDiffs(initialValues?.founders || [], values?.founders || [], 'id');
@@ -61,6 +84,7 @@ const StartupsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', 
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -76,6 +100,10 @@ const StartupsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', 
           established: initialValues?.established ? dayjs(initialValues?.established) : null,
         }}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

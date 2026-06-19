@@ -1,3 +1,4 @@
+import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
 import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
@@ -18,6 +19,12 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
   const [updateItem, setUpdateItem] = useState<IAd>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', content: '', onConfirm: () => {} });
 
   const adUpdateFn = AdsHooks.useUpdate({
     config: {
@@ -66,10 +73,19 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
             checked={isActive}
             onChange={(checked) => {
               getAccess(['ads:update'], () => {
-                adUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isActive: checked,
+                const action = checked ? 'activate' : 'deactivate';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Ad`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    adUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isActive: checked,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -130,6 +146,13 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
           }
         />
       </Drawer>
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        title={confirmationDialog.title}
+        content={confirmationDialog.content}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+      />
     </React.Fragment>
   );
 };

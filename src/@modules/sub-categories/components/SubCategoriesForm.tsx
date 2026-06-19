@@ -3,7 +3,7 @@ import InfiniteScrollSelect from '@base/components/InfiniteScrollSelect';
 import { Toolbox } from '@lib/utils';
 import { CategoriesHooks } from '@modules/categories/lib/hooks';
 import { ICategory } from '@modules/categories/lib/interfaces';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ISubCategoryCreate } from '../lib/interfaces';
 
@@ -13,11 +13,34 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<ISubCategoryCreate>;
   onFinish: (values: ISubCategoryCreate) => void;
+  backendError?: string | null;
 }
 
-const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [categorySearchTerm, setCategorySearchTerm] = useState(null);
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const categoryQuery = CategoriesHooks.useFindById({
     id: formValues?.categoryId,
@@ -41,6 +64,7 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -50,6 +74,10 @@ const SubCategoriesForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
           ...initialValues,
         }}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

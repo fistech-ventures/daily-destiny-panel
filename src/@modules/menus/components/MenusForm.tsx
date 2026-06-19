@@ -1,7 +1,7 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import FloatSelect from '@base/antd/components/FloatSelect';
 import { Toolbox } from '@lib/utils';
-import { Button, Col, Form, FormInstance, Radio, Row, Space } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, Space, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { MenusHooks } from '../lib/hooks';
 import { IMenuCreate } from '../lib/interfaces';
@@ -12,11 +12,34 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IMenuCreate>;
   onFinish: (values: IMenuCreate) => void;
+  backendError?: string | null;
 }
 
-const MenusForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const MenusForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [activeLang, setActiveLang] = useState<'en' | 'bn'>('en');
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const handleFinishFn = (values) => {
     values.language = activeLang === 'en' ? 'English' : 'Bengali';
@@ -40,6 +63,7 @@ const MenusForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', ini
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Space className="mb-8">
         <Button size="large" type={activeLang === 'en' ? 'primary' : 'default'} onClick={() => setActiveLang('en')}>
           English
@@ -55,6 +79,10 @@ const MenusForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', ini
         form={form}
         initialValues={initialValues}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

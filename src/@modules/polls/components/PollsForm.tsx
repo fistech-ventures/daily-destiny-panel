@@ -8,7 +8,7 @@ import RichTextEditor from '@base/components/RichTextEditor';
 import { Toolbox } from '@lib/utils';
 import { AuthorsHooks } from '@modules/authors/lib/hooks';
 import { IAuthor } from '@modules/authors/lib/interfaces';
-import { Button, Col, Form, FormInstance, Radio, Row, Space } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, Space, message } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { IoCalendar } from 'react-icons/io5';
@@ -20,12 +20,35 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IPollCreate>;
   onFinish: (values: IPollCreate) => void;
+  backendError?: string | null;
 }
 
-const PollsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const PollsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [activeLang, setActiveLang] = useState<'en' | 'bn'>('en');
   const formValues = Form.useWatch([], form);
   const [authorSearchTerm, setAuthorSearchTerm] = useState(null);
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const handleFinishFn = (values) => {
     values.language = activeLang === 'en' ? 'English' : 'Bengali';
@@ -61,6 +84,7 @@ const PollsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', ini
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Space className="mb-8">
         <Button size="large" type={activeLang === 'en' ? 'primary' : 'default'} onClick={() => setActiveLang('en')}>
           English
@@ -79,6 +103,10 @@ const PollsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', ini
           date: initialValues?.date ? dayjs(initialValues?.date) : null,
         }}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

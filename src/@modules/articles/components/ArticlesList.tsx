@@ -1,4 +1,5 @@
 import BaseModalWithoutClicker from '@base/components/BaseModalWithoutClicker';
+import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
 import DragSortableTable, { handleBulkPurifiedDataFn, handleNewOrderedDataFn } from '@base/components/DragSortableTable';
 import { getAccess } from '@modules/auth/lib/utils/client';
@@ -93,6 +94,12 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
   const [updateStatusItem, setUpdateStatusItem] = useState<IArticle>(null);
   const [previewItem, setPreviewItem] = useState<IArticle>(null);
   const isBulkUpdateRef = useRef(false);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', content: '', onConfirm: () => {} });
 
   const articleUpdateFn = ArticlesHooks.useUpdate({
     config: {
@@ -268,10 +275,19 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
             checked={isActive}
             onChange={(checked) => {
               getAccess(['articles:update'], () => {
-                articleUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isActive: checked,
+                const action = checked ? 'activate' : 'deactivate';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Article`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    articleUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isActive: checked,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -290,11 +306,20 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
             checked={isFeatured}
             onChange={(checked) => {
               getAccess(['articles:update'], () => {
-                articleUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isFeatured: checked,
-                    position: checked ? (typeof record.position === 'string' ? parseInt(record.position, 10) : (record.position || 0)) : 0,
+                const action = checked ? 'feature' : 'unfeature';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Article`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    articleUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isFeatured: checked,
+                        position: checked ? (typeof record.position === 'string' ? parseInt(record.position, 10) : (record.position || 0)) : 0,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -306,18 +331,27 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     ...(pageType === 'exclusive' || pageType === 'default' ? [{
       key: 'isExclusive',
       dataIndex: 'isExclusive',
-      title: 'Exclusive',
+      title: 'Lead',
       render: (isExclusive, record) => {
         return (
           <CustomSwitch
             checked={isExclusive}
             onChange={(checked) => {
               getAccess(['articles:update'], () => {
-                articleUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isExclusive: checked,
-                    position: checked ? (typeof record.position === 'string' ? parseInt(record.position, 10) : (record.position || 0)) : 0,
+                const action = checked ? 'mark as Lead' : 'remove from lead';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Article`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    articleUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isExclusive: checked,
+                        position: checked ? (typeof record.position === 'string' ? parseInt(record.position, 10) : (record.position || 0)) : 0,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -427,6 +461,13 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       >
         <ArticlePreview article={previewItem} />
       </BaseModalWithoutClicker>
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        title={confirmationDialog.title}
+        content={confirmationDialog.content}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+      />
     </React.Fragment>
   );
 };

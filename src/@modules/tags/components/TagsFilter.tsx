@@ -1,11 +1,11 @@
-import { Toolbox } from '@lib/utils';
-import { Button, DatePicker, Drawer, Form, Radio, Space } from 'antd';
-import dayjs from 'dayjs';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { FaFilter } from 'react-icons/fa';
-import { MdClear } from 'react-icons/md';
-import { ITagsFilter } from '../lib/interfaces';
+import { Toolbox } from "@lib/utils";
+import { Button, DatePicker, Drawer, Form, Radio, Space } from "antd";
+import dayjs from "dayjs";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { FaFilter } from "react-icons/fa";
+import { MdClear } from "react-icons/md";
+import { ITagsFilter } from "../lib/interfaces";
 
 interface IProps {
   initialValues: ITagsFilter;
@@ -22,8 +22,8 @@ const TagsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
     formInstance.resetFields();
 
     const values = {
-      isActive: '',
-      sortOrder: '',
+      isActive: "",
+      sortOrder: "",
       dateRange: [],
       ...initialValues,
     };
@@ -41,18 +41,28 @@ const TagsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
 
   return (
     <div className="flex flex-wrap gap-3 justify-end mb-4">
-      <Button type="primary" icon={<FaFilter />} onClick={() => setDrawerOpen(true)} ghost>
+      <Button
+        type="primary"
+        icon={<FaFilter />}
+        onClick={() => setDrawerOpen(true)}
+        ghost
+      >
         Filter
       </Button>
-      <Drawer width={380} title="Filter" open={isDrawerOpen} onClose={() => setDrawerOpen(false)}>
+      <Drawer
+        width={380}
+        title="Filter"
+        open={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      >
         <Form
           form={formInstance}
           onFinish={Toolbox.debounce((values) => {
             values.startDate = values?.dateRange?.length
-              ? dayjs(values?.dateRange?.[0]).startOf('day').toISOString()
+              ? dayjs(values?.dateRange?.[0]).startOf("day").toISOString()
               : null;
             values.endDate = values?.dateRange?.length
-              ? dayjs(values?.dateRange?.[1]).endOf('day').toISOString()
+              ? dayjs(values?.dateRange?.[1]).endOf("day").toISOString()
               : null;
 
             delete values.dateRange;

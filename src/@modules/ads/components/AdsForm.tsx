@@ -2,7 +2,7 @@ import FloatDatePicker from '@base/antd/components/FloatDatePicker';
 import FloatInput from '@base/antd/components/FloatInput';
 import CustomUploader from '@base/components/CustomUploader';
 import { Toolbox } from '@lib/utils';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { IoCalendar } from 'react-icons/io5';
@@ -15,9 +15,11 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IAdCreate>;
   onFinish: (values: IAdCreate) => void;
+  backendError?: string | null;
 }
 
-const AdsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const AdsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
 
   const getUploaderFieldName = () => {
@@ -29,6 +31,29 @@ const AdsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initi
   const getUploaderAcceptedTypes = () => {
     if (formValues?.type === ENUM_ADS_TYPES.VIDEO) return ['mp4', 'mov', 'avi', 'wmv', 'flv', 'mkv'];
     return ['jpg', 'jpeg', 'png'];
+  };
+
+  // Show backend error message if provided
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      // Scroll to the first error field
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
   };
 
   const handleFinishFn = (values) => {
@@ -48,6 +73,7 @@ const AdsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initi
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -59,6 +85,10 @@ const AdsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initi
           endDate: initialValues?.endDate ? dayjs(initialValues.endDate) : null,
         }}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

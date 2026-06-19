@@ -13,16 +13,19 @@ const CreateArticlePage = () => {
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
   const [shouldReset, setShouldReset] = useState(false);
+  const [backendError, setBackendError] = useState<string | null>(null);
 
   const articleCreateFn = ArticlesHooks.useCreate({
     config: {
       onSuccess: (res) => {
         if (!res.success) {
           messageApi.error(res.message);
+          setBackendError(res.message);
           setShouldReset(false);
           return;
         }
 
+        setBackendError(null);
         formInstance.resetFields();
         messageApi.success(res.message);
         setShouldReset(true);
@@ -44,8 +47,12 @@ const CreateArticlePage = () => {
           form={formInstance}
           initialValues={{ isExclusive: false, isActive: true, isFeatured: false }}
           isLoading={articleCreateFn.isPending}
-          onFinish={(values) => articleCreateFn.mutate(values)}
+          onFinish={(values) => {
+            setBackendError(null);
+            articleCreateFn.mutate(values);
+          }}
           shouldReset={shouldReset}
+          backendError={backendError}
         />
       </div>
     </React.Fragment>

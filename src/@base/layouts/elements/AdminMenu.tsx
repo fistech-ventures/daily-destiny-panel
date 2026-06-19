@@ -235,7 +235,7 @@ const AdminMenu: React.FC<IProps> = ({
                         Paths.admin.articles.exclusive,
                       )}
                     >
-                      Exclusive
+                      Lead Articles
                     </CustomLink>
                   ),
                 },

@@ -1,7 +1,7 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import CustomUploader from '@base/components/CustomUploader';
 import { IEpaperCreate } from '@modules/epapers/lib/interfaces';
-import { Button, Col, DatePicker, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, DatePicker, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect } from 'react';
 import dayjs from 'dayjs';
 
@@ -11,15 +11,39 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IEpaperCreate>;
   onFinish: (values: IEpaperCreate) => void;
+  backendError?: string | null;
 }
 
-const EpapersForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const EpapersForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
   useEffect(() => {
     form.resetFields();
   }, [form, initialValues]);
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -32,6 +56,10 @@ const EpapersForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', i
           isActive: initialValues?.isActive ?? true,
         }}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

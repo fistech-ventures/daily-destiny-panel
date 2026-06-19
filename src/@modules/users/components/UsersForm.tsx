@@ -20,6 +20,7 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IUserCreate>;
   onFinish: (values: IUserCreate) => void;
+  backendError?: string | null;
 }
 
 const UsersForm: React.FC<IProps> = ({
@@ -30,10 +31,32 @@ const UsersForm: React.FC<IProps> = ({
   formType = 'create',
   initialValues,
   onFinish,
+  backendError,
 }) => {
   const [messageApi, messageHolder] = message.useMessage();
   const [rolesForCreation, setRolesForCreation] = useState<string[]>([]);
   const [roleSearchTerm, setRoleSearchTerm] = useState(null);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const rolesSpecificQuery = RolesHooks.useFindSpecifics({
     config: {
@@ -97,6 +120,10 @@ const UsersForm: React.FC<IProps> = ({
           roles: initialValues?.roles?.map((role) => role?.role),
         }}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

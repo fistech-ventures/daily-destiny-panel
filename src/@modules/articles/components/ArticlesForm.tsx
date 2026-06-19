@@ -16,7 +16,7 @@ import { LocationsHooks } from '@modules/locations/lib/hooks';
 import { ILocation } from '@modules/locations/lib/interfaces';
 import { SubCategoriesHooks } from '@modules/sub-categories/lib/hooks';
 import { ISubCategory } from '@modules/sub-categories/lib/interfaces';
-import { Button, Card, Col, Form, FormInstance, Radio, Row, Select, Space } from 'antd';
+import { Button, Card, Col, Form, FormInstance, Radio, Row, Select, Space, message } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { AiOutlineDelete, AiOutlinePlus } from 'react-icons/ai';
@@ -30,6 +30,7 @@ interface IProps {
   initialValues?: Partial<IArticleCreate>;
   onFinish: (values: IArticleCreate) => void;
   shouldReset?: boolean;
+  backendError?: string | null;
 }
 
 const ArticlesForm: React.FC<IProps> = ({
@@ -39,7 +40,9 @@ const ArticlesForm: React.FC<IProps> = ({
   initialValues,
   onFinish,
   shouldReset,
+  backendError,
 }) => {
+  const [messageApi, messageHolder] = message.useMessage();
   const [activeLang, setActiveLang] = useState<'en' | 'bn'>('bn');
   const formValues = Form.useWatch([], form);
   const [categorySearchTerm, setCategorySearchTerm] = useState(null);
@@ -91,6 +94,29 @@ const ArticlesForm: React.FC<IProps> = ({
       return '';
     }
     return '';
+  };
+
+  // Show backend error message if provided
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      // Scroll to the first error field
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
   };
 
   const handleFinishFn = (values) => {
@@ -275,6 +301,7 @@ const ArticlesForm: React.FC<IProps> = ({
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -288,6 +315,10 @@ const ArticlesForm: React.FC<IProps> = ({
           date: initialValues?.date ? dayjs(initialValues?.date) : dayjs(),
         }}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12}>
@@ -533,7 +564,7 @@ const ArticlesForm: React.FC<IProps> = ({
                 initialOptions={authorQuery.data?.data?.id ? [authorQuery.data?.data] : []}
                 option={({ item: author }) => ({
                   key: author?.id,
-                  label: author?.name,
+                  label: `${author?.name} (${author?.nameBn})`,
                   value: author?.id,
                 })}
                 onChangeSearchTerm={(searchTerm) => setAuthorSearchTerm(searchTerm)}
@@ -551,10 +582,10 @@ const ArticlesForm: React.FC<IProps> = ({
             <Form.Item name="isExclusive" className="!mb-0">
               <Radio.Group buttonStyle="solid" className="w-full text-center">
                 <Radio.Button className="w-1/2" value={true}>
-                  Exclusive
+                  Lead
                 </Radio.Button>
                 <Radio.Button className="w-1/2" value={false}>
-                  Non Exclusive
+                  Non Lead
                 </Radio.Button>
               </Radio.Group>
             </Form.Item>

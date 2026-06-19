@@ -7,7 +7,7 @@ import WithAuthorization from '@modules/auth/components/WithAuthorization';
 import { Form, Skeleton, message } from 'antd';
 import dayjs from 'dayjs';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const EditArticlePage = () => {
   const router = useRouter();
@@ -15,6 +15,7 @@ const EditArticlePage = () => {
   const id = params.id as string;
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
+  const [backendError, setBackendError] = useState<string | null>(null);
   
   // Get the referring page from query params or default to list
   const getRedirectUrl = () => {
@@ -41,9 +42,11 @@ const EditArticlePage = () => {
       onSuccess: (res) => {
         if (!res.success) {
           messageApi.error(res.message);
+          setBackendError(res.message);
           return;
         }
 
+        setBackendError(null);
         formInstance.resetFields();
         messageApi.success(res.message);
         router.push(getRedirectUrl());
@@ -104,12 +107,14 @@ const EditArticlePage = () => {
               coverImageCredit: '', // Default empty string for create form
             }}
             isLoading={articleUpdateFn.isPending}
-            onFinish={(values) =>
+            onFinish={(values) => {
+              setBackendError(null);
               articleUpdateFn.mutate({
                 id,
                 data: values,
-              })
-            }
+              });
+            }}
+            backendError={backendError}
           />
         )}
       </div>

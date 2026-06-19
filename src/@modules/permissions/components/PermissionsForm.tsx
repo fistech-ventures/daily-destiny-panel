@@ -2,7 +2,7 @@ import FloatSelect from '@base/antd/components/FloatSelect';
 import InfiniteScrollSelect from '@base/components/InfiniteScrollSelect';
 import { Permissions } from '@lib/constant';
 import { PermissionTypesHooks } from '@modules/permission-types/lib/hooks';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { IPermissionType } from '../../permission-types/lib/interfaces';
 import { PermissionsHooks } from '../lib/hooks';
@@ -14,11 +14,34 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IPermissionCreate>;
   onFinish: (values: IPermissionCreate) => void;
+  backendError?: string | null;
 }
 
-const PermissionsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const PermissionsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const formValues = Form.useWatch([], form);
   const [permissionTypeSearchTerm, setPermissionTypeSearchTerm] = useState(null);
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   const permissionTypeQuery = PermissionTypesHooks.useFindById({
     id: formValues?.permissionTypeId,
@@ -48,14 +71,20 @@ const PermissionsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create
   }, [form, initialValues]);
 
   return (
-    <Form
-      autoComplete="off"
-      size="large"
-      layout="vertical"
-      form={form}
-      initialValues={initialValues}
-      onFinish={onFinish}
-    >
+    <React.Fragment>
+      {messageHolder}
+      <Form
+        autoComplete="off"
+        size="large"
+        layout="vertical"
+        form={form}
+        initialValues={initialValues}
+        onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
+      >
       <Row gutter={[16, 16]}>
         <Col xs={24}>
           <Form.Item
@@ -137,7 +166,8 @@ const PermissionsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create
           </Form.Item>
         </Col>
       </Row>
-    </Form>
+      </Form>
+    </React.Fragment>
   );
 };
 

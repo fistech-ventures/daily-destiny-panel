@@ -1,6 +1,6 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import CustomUploader from '@base/components/CustomUploader';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect } from 'react';
 import { IEntrepreneurCreate } from '../lib/interfaces';
 
@@ -10,10 +10,33 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IEntrepreneurCreate>;
   onFinish: (values: IEntrepreneurCreate) => void;
+  backendError?: string | null;
 }
 
-const EntrepreneursForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const EntrepreneursForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   useEffect(() => {
     form.resetFields();
@@ -21,6 +44,7 @@ const EntrepreneursForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -28,6 +52,10 @@ const EntrepreneursForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
         form={form}
         initialValues={initialValues}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

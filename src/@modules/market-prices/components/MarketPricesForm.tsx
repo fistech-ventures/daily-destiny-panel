@@ -1,7 +1,7 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import CustomUploader from '@base/components/CustomUploader';
 import { cn } from '@lib/utils';
-import { Button, Col, Form, FormInstance, InputNumber, Radio, Row, Space } from 'antd';
+import { Button, Col, Form, FormInstance, InputNumber, Radio, Row, Space, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { IMarketPriceCreate } from '../lib/interfaces';
 
@@ -11,10 +11,18 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IMarketPriceCreate>;
   onFinish: (values: IMarketPriceCreate) => void;
+  backendError?: string | null;
 }
 
-const MarketPricesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const MarketPricesForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [activeLang, setActiveLang] = useState<'en' | 'bn'>('en');
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
 
   useEffect(() => {
     form.resetFields();
@@ -22,6 +30,7 @@ const MarketPricesForm: React.FC<IProps> = ({ isLoading, form, formType = 'creat
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Space className="mb-8">
         <Button size="large" type={activeLang === 'en' ? 'primary' : 'default'} onClick={() => setActiveLang('en')}>
           English
@@ -48,6 +57,20 @@ const MarketPricesForm: React.FC<IProps> = ({ isLoading, form, formType = 'creat
           } else if (errorFields.includes('titleBn') && activeLang !== 'bn') {
             setActiveLang('bn');
           }
+          
+          // Also show warning and scroll to first error
+          if (errorFields && errorFields.length > 0) {
+            const firstErrorField = errorInfo.errorFields[0];
+            const errorMessage = firstErrorField.errors[0];
+            messageApi.warning(`${errorMessage}`);
+            form.scrollToField(firstErrorField.name, {
+              behavior: 'smooth',
+              block: 'center',
+            });
+          }
+        }}
+        validateMessages={{
+          required: '${label} is required!',
         }}
       >
         <Row gutter={[16, 16]}>

@@ -1,5 +1,6 @@
 'use client';
 
+import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import PageHeader from '@base/components/PageHeader';
 import { Roles } from '@lib/constant';
 import { Toolbox } from '@lib/utils';
@@ -19,6 +20,12 @@ const RolesIdPage = () => {
   const [messageApi, messageHolder] = message.useMessage();
   const [groupedPermissions, setGroupedPermissions] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', content: '', onConfirm: () => {} });
 
   const roleQuery = RolesHooks.useFindById({
     id: String(id),
@@ -122,22 +129,34 @@ const RolesIdPage = () => {
                     onChange={() => {
                       getAccess(['role-manager-roles:update'], () => {
                         const checkedAll = permission?.values?.every((permission) => permission?.isAlreadyAdded);
+                        const action = checkedAll ? 'remove' : 'add';
+                        const permissionCount = checkedAll
+                          ? permission?.values?.filter((permission) => permission?.isAlreadyAdded).length
+                          : permission?.values?.filter((permission) => !permission?.isAlreadyAdded).length;
 
-                        if (checkedAll) {
-                          rolePermissionsRemoveFn.mutate({
-                            id: String(id),
-                            permissions: permission?.values
-                              ?.filter((permission) => permission?.isAlreadyAdded)
-                              .map((permission) => permission?.id),
-                          });
-                        } else {
-                          rolePermissionsCreateFn.mutate({
-                            id: String(id),
-                            permissions: permission?.values
-                              ?.filter((permission) => !permission?.isAlreadyAdded)
-                              .map((permission) => permission?.id),
-                          });
-                        }
+                        setConfirmationDialog({
+                          open: true,
+                          title: `${action.charAt(0).toUpperCase() + action.slice(1)} Permissions`,
+                          content: `Are you sure you want to ${action} ${permissionCount} permissions for "${permission?.name}"?`,
+                          onConfirm: () => {
+                            if (checkedAll) {
+                              rolePermissionsRemoveFn.mutate({
+                                id: String(id),
+                                permissions: permission?.values
+                                  ?.filter((permission) => permission?.isAlreadyAdded)
+                                  .map((permission) => permission?.id),
+                              });
+                            } else {
+                              rolePermissionsCreateFn.mutate({
+                                id: String(id),
+                                permissions: permission?.values
+                                  ?.filter((permission) => !permission?.isAlreadyAdded)
+                                  .map((permission) => permission?.id),
+                              });
+                            }
+                            setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                          },
+                        });
                       });
                     }}
                   >
@@ -151,17 +170,26 @@ const RolesIdPage = () => {
                         checked={value?.isAlreadyAdded}
                         onChange={() => {
                           getAccess(['role-manager-roles:update'], () => {
-                            if (value?.isAlreadyAdded) {
-                              rolePermissionsRemoveFn.mutate({
-                                id: String(id),
-                                permissions: [value?.id],
-                              });
-                            } else {
-                              rolePermissionsCreateFn.mutate({
-                                id: String(id),
-                                permissions: [value?.id],
-                              });
-                            }
+                            const action = value?.isAlreadyAdded ? 'remove' : 'add';
+                            setConfirmationDialog({
+                              open: true,
+                              title: `${action.charAt(0).toUpperCase() + action.slice(1)} Permission`,
+                              content: `Are you sure you want to ${action} "${value.title}" permission?`,
+                              onConfirm: () => {
+                                if (value?.isAlreadyAdded) {
+                                  rolePermissionsRemoveFn.mutate({
+                                    id: String(id),
+                                    permissions: [value?.id],
+                                  });
+                                } else {
+                                  rolePermissionsCreateFn.mutate({
+                                    id: String(id),
+                                    permissions: [value?.id],
+                                  });
+                                }
+                                setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                              },
+                            });
                           });
                         }}
                       >
@@ -177,6 +205,13 @@ const RolesIdPage = () => {
           <Empty description="No permissions available" />
         )}
       </div>
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        title={confirmationDialog.title}
+        content={confirmationDialog.content}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+      />
     </React.Fragment>
   );
 };

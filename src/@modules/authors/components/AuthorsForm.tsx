@@ -1,7 +1,7 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import CustomUploader from '@base/components/CustomUploader';
 import { cn } from '@lib/utils';
-import { Button, Col, Form, FormInstance, Radio, Row, Space } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, Space, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { IAuthorCreate } from '../lib/interfaces';
 
@@ -11,11 +11,34 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<IAuthorCreate>;
   onFinish: (values: IAuthorCreate) => void;
+  backendError?: string | null;
 }
 
-const AuthorsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const AuthorsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [activeLang, setActiveLang] = useState<'en' | 'bn'>('en');
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   useEffect(() => {
     form.resetFields();
@@ -23,6 +46,7 @@ const AuthorsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', i
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Space className="mb-8">
         <Button size="large" type={activeLang === 'en' ? 'primary' : 'default'} onClick={() => setActiveLang('en')}>
           English
@@ -38,6 +62,10 @@ const AuthorsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', i
         form={form}
         initialValues={initialValues}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

@@ -1,3 +1,4 @@
+import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
 import DragSortableTable, { handleBulkPurifiedDataFn, handleNewOrderedDataFn } from '@base/components/DragSortableTable';
 import { getAccess } from '@modules/auth/lib/utils/client';
@@ -26,6 +27,12 @@ const CategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta })
   const [formInstance] = Form.useForm();
   const [updateItem, setUpdateItem] = useState<ICategory>(null);
   const isBulkUpdateRef = useRef(false);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', content: '', onConfirm: () => {} });
 
   const categoryUpdateFn = CategoriesHooks.useUpdate({
     config: {
@@ -126,10 +133,19 @@ const CategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta })
             checked={isActive}
             onChange={(checked) => {
               getAccess(['categories:update'], () => {
-                categoryUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isActive: checked,
+                const action = checked ? 'activate' : 'deactivate';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Category`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    categoryUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isActive: checked,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -205,6 +221,13 @@ const CategoriesList: React.FC<IProps> = ({ isLoading, data, pagination, meta })
           }
         />
       </Drawer>
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        title={confirmationDialog.title}
+        content={confirmationDialog.content}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+      />
     </React.Fragment>
   );
 };

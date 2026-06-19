@@ -39,7 +39,7 @@ const ArticlesPage = () => {
     <React.Fragment>
       {messageHolder}
       <PageHeader
-        title="Exclusive Articles"
+        title="Lead Articles"
         subTitle={<BaseSearch />}
         tags={[<Tag key={1}>Total: {articlesQuery.data?.meta?.total || 0}</Tag>]}
       />

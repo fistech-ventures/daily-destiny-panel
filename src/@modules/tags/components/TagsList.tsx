@@ -1,3 +1,4 @@
+import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
 import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
@@ -7,7 +8,6 @@ import { AiFillEdit } from 'react-icons/ai';
 import { TagsHooks } from '@modules/tags/lib/hooks';
 import { ITag } from '@modules/tags/lib/interfaces';
 import TagsForm from './TagsForm';
-import { IUser } from '@modules/users/lib/interfaces';
 
 interface IProps {
   isLoading: boolean;
@@ -19,6 +19,12 @@ const TagsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
   const [updateItem, setUpdateItem] = useState<ITag>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', content: '', onConfirm: () => {} });
 
   const tagUpdateFn = TagsHooks.useUpdate({
     config: {
@@ -61,10 +67,19 @@ const TagsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
             checked={isActive}
             onChange={(checked) => {
               getAccess(['tags:update'], () => {
-                tagUpdateFn.mutate({
-                  id: record?.id,
-                  data: {
-                    isActive: checked,
+                const action = checked ? 'activate' : 'deactivate';
+                setConfirmationDialog({
+                  open: true,
+                  title: `${action.charAt(0).toUpperCase() + action.slice(1)} Tag`,
+                  content: `Are you sure you want to ${action} "${record.title}"?`,
+                  onConfirm: () => {
+                    tagUpdateFn.mutate({
+                      id: record?.id,
+                      data: {
+                        isActive: checked,
+                      },
+                    });
+                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
                   },
                 });
               });
@@ -88,16 +103,6 @@ const TagsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       ),
     },
     {
-      key: 'createdBy',
-      dataIndex: 'createdBy',
-      title: 'Created By',
-      render: (userData: IUser) => (
-        <span>
-          {userData?.fullName}
-        </span>
-      ),
-    },
-    {
       key: 'updatedAt',
       dataIndex: 'updatedAt',
       title: 'Updated At',
@@ -108,16 +113,6 @@ const TagsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
             month: 'short', 
             year: 'numeric' 
           })}
-        </span>
-      ),
-    },
-    {
-      key: 'updatedBy',
-      dataIndex: 'updatedBy',
-      title: 'Updated By',
-      render: (userData: IUser) => (
-        <span>
-          {userData?.fullName}
         </span>
       ),
     },
@@ -173,6 +168,13 @@ const TagsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
           }
         />
       </Drawer>
+      <ConfirmationDialog
+        open={confirmationDialog.open}
+        title={confirmationDialog.title}
+        content={confirmationDialog.content}
+        onConfirm={confirmationDialog.onConfirm}
+        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+      />
     </React.Fragment>
   );
 };

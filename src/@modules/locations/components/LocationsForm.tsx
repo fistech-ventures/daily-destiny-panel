@@ -3,7 +3,7 @@ import FloatSelect from '@base/antd/components/FloatSelect';
 import InfiniteScrollSelect from '@base/components/InfiniteScrollSelect';
 import { LocationsHooks } from '@modules/locations/lib/hooks';
 import { ILocation, ILocationCreate } from '@modules/locations/lib/interfaces';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 interface IProps {
@@ -12,6 +12,7 @@ interface IProps {
   formType?: 'create' | 'update';
   initialValues?: Partial<ILocationCreate>;
   onFinish: (values: ILocationCreate) => void;
+  backendError?: string | null;
 }
 
 const locationTypes = [
@@ -34,9 +35,31 @@ const locationTypeToParentType: Record<string, string> = {
   pourosova: 'upazilla',
 };
 
-const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish }) => {
+const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, backendError }) => {
   const [locationSearchTerm, setLocationSearchTerm] = useState<string | null>(null);
+  const [messageApi, messageHolder] = message.useMessage();
   const formValues = Form.useWatch([], form);
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
 
   // Get the parent type based on selected location type
   const parentType = formValues?.type ? locationTypeToParentType[formValues.type] : null;
@@ -75,6 +98,7 @@ const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create',
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -86,6 +110,10 @@ const LocationsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create',
           isActive: initialValues?.isActive,
         }}
         onFinish={onFinish}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>

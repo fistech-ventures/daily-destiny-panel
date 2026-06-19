@@ -1,6 +1,6 @@
 import FloatInput from '@base/antd/components/FloatInput';
 import { ITag, ITagCreate, ITagUpdate } from '@modules/tags/lib/interfaces';
-import { Button, Col, Form, FormInstance, Radio, Row } from 'antd';
+import { Button, Col, Form, FormInstance, Radio, Row, message } from 'antd';
 import React, { useEffect } from 'react';
 
 interface IProps {
@@ -10,9 +10,33 @@ interface IProps {
   initialValues?: Partial<ITag>;
   onFinish: (values: ITagCreate | ITagUpdate) => void;
   shouldReset?: boolean;
+  backendError?: string | null;
 }
 
-const TagsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, shouldReset }) => {
+const TagsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', initialValues, onFinish, shouldReset, backendError }) => {
+  const [messageApi, messageHolder] = message.useMessage();
+
+  useEffect(() => {
+    if (backendError) {
+      messageApi.error(backendError);
+    }
+  }, [backendError, messageApi]);
+
+  const handleFinishFailed = (errorInfo: any) => {
+    const { errorFields } = errorInfo;
+    if (errorFields && errorFields.length > 0) {
+      const firstErrorField = errorFields[0];
+      const errorMessage = firstErrorField.errors[0];
+      
+      messageApi.warning(`${errorMessage}`);
+      
+      form.scrollToField(firstErrorField.name, {
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  };
+
   const handleFinishFn = (values) => {
     onFinish(values);
   };
@@ -25,6 +49,7 @@ const TagsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', init
 
   return (
     <React.Fragment>
+      {messageHolder}
       <Form
         autoComplete="off"
         size="large"
@@ -32,6 +57,10 @@ const TagsForm: React.FC<IProps> = ({ isLoading, form, formType = 'create', init
         form={form}
         initialValues={initialValues}
         onFinish={handleFinishFn}
+        onFinishFailed={handleFinishFailed}
+        validateMessages={{
+          required: '${label} is required!',
+        }}
       >
         <Row gutter={[16, 16]}>
           <Col xs={24}>
