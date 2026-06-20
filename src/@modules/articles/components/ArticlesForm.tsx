@@ -465,7 +465,7 @@ const ArticlesForm: React.FC<IProps> = ({
                 allowClear
                 showSearch
                 virtual={false}
-                placeholder="Sub Category"
+                placeholder="Sub Category (Optional)"
                 initialOptions={subCategoryQuery.data?.data?.id ? [subCategoryQuery.data?.data] : []}
                 option={({ item: subCategory }) => ({
                   key: subCategory?.id,
