@@ -291,6 +291,82 @@ const AdminMenu: React.FC<IProps> = ({
               }),
               getContentAccess({
                 content: {
+                  key: Paths.admin.articles.video.root,
+                  icon: <MdOutlineFeaturedVideo />,
+                  label: "Video Articles",
+                  children: [
+                    getContentAccess({
+                      content: {
+                        key: Paths.admin.articles.video.create,
+                        icon: <FaPlusCircle />,
+                        label: (
+                          <CustomLink href={Paths.admin.articles.video.create}>
+                            Create Video
+                          </CustomLink>
+                        ),
+                      },
+                      allowedAccess: ["articles:write"],
+                    }),
+                    getContentAccess({
+                      content: {
+                        key: Paths.admin.articles.video.list,
+                        icon: <CiCircleList />,
+                        label: (
+                          <CustomLink
+                            href={Toolbox.appendPagination(
+                              Paths.admin.articles.video.list,
+                            )}
+                          >
+                            Video List
+                          </CustomLink>
+                        ),
+                      },
+                      allowedAccess: ["articles:read"],
+                    }),
+                  ],
+                },
+                allowedAccess: ["articles:read", "articles:write"],
+              }),
+              getContentAccess({
+                content: {
+                  key: Paths.admin.articles.photo.root,
+                  icon: <MdOutlineFeaturedVideo />,
+                  label: "Photo Articles",
+                  children: [
+                    getContentAccess({
+                      content: {
+                        key: Paths.admin.articles.photo.create,
+                        icon: <FaPlusCircle />,
+                        label: (
+                          <CustomLink href={Paths.admin.articles.photo.create}>
+                            Create Photo
+                          </CustomLink>
+                        ),
+                      },
+                      allowedAccess: ["articles:write"],
+                    }),
+                    getContentAccess({
+                      content: {
+                        key: Paths.admin.articles.photo.list,
+                        icon: <CiCircleList />,
+                        label: (
+                          <CustomLink
+                            href={Toolbox.appendPagination(
+                              Paths.admin.articles.photo.list,
+                            )}
+                          >
+                            Photo List
+                          </CustomLink>
+                        ),
+                      },
+                      allowedAccess: ["articles:read"],
+                    }),
+                  ],
+                },
+                allowedAccess: ["articles:read", "articles:write"],
+              }),
+              getContentAccess({
+                content: {
                   key: Paths.admin.articles.list,
                   icon: <CiCircleList />,
                   label: (

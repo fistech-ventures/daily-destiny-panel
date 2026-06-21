@@ -55,6 +55,16 @@ export const Paths = {
       archived: '/admin/articles/archived',
       featured: '/admin/articles/featured',
       exclusive: '/admin/articles/exclusive',
+      video: {
+        root: '/admin/articles/video',
+        list: '/admin/articles/video/list',
+        create: '/admin/articles/video/create',
+      },
+      photo: {
+        root: '/admin/articles/photo',
+        list: '/admin/articles/photo/list',
+        create: '/admin/articles/photo/create',
+      },
     },
     tags: {
       root: '/admin/tags',

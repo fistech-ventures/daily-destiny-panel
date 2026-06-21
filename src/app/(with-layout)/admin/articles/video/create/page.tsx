@@ -6,14 +6,19 @@ import { ArticlesHooks } from '@modules/articles/lib/hooks';
 import WithAuthorization from '@modules/auth/components/WithAuthorization';
 import { Form, message } from 'antd';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
-const CreateArticlePage = () => {
+const CreateVideoArticlePage = () => {
   const router = useRouter();
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
   const [shouldReset, setShouldReset] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
+
+  const initialValues = useMemo(() => ({
+    type: 'video',
+    isActive: true,
+  }), []);
 
   const articleCreateFn = ArticlesHooks.useCreate({
     config: {
@@ -29,7 +34,7 @@ const CreateArticlePage = () => {
         formInstance.resetFields();
         messageApi.success(res.message);
         setShouldReset(true);
-        router.push('/admin/articles/list');
+        router.push('/admin/articles/video/list');
       },
     },
   });
@@ -38,14 +43,14 @@ const CreateArticlePage = () => {
     <React.Fragment>
       {messageHolder}
       <PageHeader
-        title="Create New Article"
-        onBack={() => router.push('/admin/articles/list')}
+        title="Create Video Article"
+        onBack={() => router.push('/admin/articles/video/list')}
       />
       <div className="bg-white dark:bg-[#141414] p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
         <ArticlesForm
           formType="create"
           form={formInstance}
-          initialValues={{ type: 'news', isExclusive: false, isActive: true, isFeatured: false }}
+          initialValues={initialValues}
           isLoading={articleCreateFn.isPending}
           onFinish={(values) => {
             setBackendError(null);
@@ -59,4 +64,4 @@ const CreateArticlePage = () => {
   );
 };
 
-export default WithAuthorization(CreateArticlePage, { allowedAccess: ['articles:write'] });
+export default WithAuthorization(CreateVideoArticlePage, { allowedAccess: ['articles:write'] });

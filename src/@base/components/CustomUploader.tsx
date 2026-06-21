@@ -3,7 +3,7 @@ import { ENUM_API_SCOPE_TYPES } from '@lib/interfaces/apiScope.interface';
 import { Toolbox } from '@lib/utils';
 import { getAuthToken } from '@modules/auth/lib/utils/client';
 import type { GetProp, UploadFile, UploadProps } from 'antd';
-import { Button, Image, message, Progress, Upload } from 'antd';
+import { Button, Image, message, Modal, Progress, Upload } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import React, { useEffect, useRef, useState } from 'react';
 import { AiOutlinePlus, AiOutlineUpload } from 'react-icons/ai';
@@ -60,6 +60,7 @@ const CustomUploader: React.FC<TProps> = ({
 }) => {
   const [isPreviewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>(null);
+  const [previewIsVideo, setPreviewIsVideo] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [compressionProgress, setCompressionProgress] = useState<number>(0);
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
@@ -133,6 +134,19 @@ const CustomUploader: React.FC<TProps> = ({
     return file;
   };
 
+  const isVideoUrl = (url: string, fileName?: string): boolean => {
+    if (fileName) {
+      const ext = fileName.split('.').pop()?.toLowerCase();
+      if (['mp4', 'webm', 'avi', 'mov', 'mkv', 'ogg'].includes(ext || '')) return true;
+    }
+    try {
+      const urlObj = new URL(url);
+      const pathExt = urlObj.pathname.split('.').pop()?.toLowerCase();
+      if (['mp4', 'webm', 'avi', 'mov', 'mkv', 'ogg'].includes(pathExt || '')) return true;
+    } catch {}
+    return false;
+  };
+
   const onPreviewFn = async (file: UploadFile) => {
     const url = file.url || file.response?.data?.[0]?.url;
 
@@ -141,6 +155,8 @@ const CustomUploader: React.FC<TProps> = ({
       return;
     }
 
+    const isVideo = file.type?.startsWith('video/') || isVideoUrl(url, file.name);
+    setPreviewIsVideo(isVideo);
     setPreviewImage(url);
     setPreviewOpen(true);
   };
@@ -204,17 +220,40 @@ const CustomUploader: React.FC<TProps> = ({
 
   return (
     <React.Fragment>
-      {previewImage && (
+      {previewImage && !previewIsVideo && (
         <Image
           wrapperStyle={{ display: 'none' }}
           preview={{
             visible: isPreviewOpen,
             onVisibleChange: (visible) => setPreviewOpen(visible),
-            afterOpenChange: (visible) => !visible && setPreviewImage(null),
+            afterOpenChange: (visible) => !visible && (setPreviewImage(null) || setPreviewIsVideo(false)),
           }}
           src={previewImage}
           alt="Preview"
         />
+      )}
+      {previewImage && previewIsVideo && (
+        <Modal
+          open={isPreviewOpen}
+          onCancel={() => {
+            setPreviewOpen(false);
+            setPreviewImage(null);
+            setPreviewIsVideo(false);
+          }}
+          footer={null}
+          width={800}
+          centered
+          destroyOnClose
+        >
+          <video
+            src={previewImage}
+            controls
+            className="w-full"
+            style={{ maxHeight: '80vh', outline: 'none' }}
+          >
+            Your browser does not support the video tag.
+          </video>
+        </Modal>
       )}
       {isCompressing && (
         <div className="mb-4">

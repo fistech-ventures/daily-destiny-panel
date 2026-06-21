@@ -15,12 +15,47 @@ import { IArticle } from '../lib/interfaces';
 import ArticlesStatusForm from './ArticlesStatusForm';
 import { useRouter } from 'next/navigation';
 
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  try {
+    const urlObj = new URL(url);
+    let videoId = '';
+    if (urlObj.hostname.includes('youtube.com')) {
+      videoId = urlObj.searchParams.get('v') || '';
+    } else if (urlObj.hostname.includes('youtu.be')) {
+      videoId = urlObj.pathname.slice(1);
+    }
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+  } catch {
+    return null;
+  }
+};
+
 interface ArticlePreviewProps {
   article?: IArticle | null;
 }
 
 const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
   if (!article) return null;
+
+  const mediaUrl = article?.medias?.[0]?.url;
+  const mediaSource = article?.medias?.[0]?.source;
+  const embedUrl = mediaSource === 'youtube' && mediaUrl ? getYouTubeEmbedUrl(mediaUrl) : null;
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      return (
+        <>
+          <span>{d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          <span>, {d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</span>
+        </>
+      );
+    } catch {
+      return null;
+    }
+  };
 
   return (
     <div className="w-full">
@@ -30,45 +65,100 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
           <img width={200} height={200} src="/images/logo.png" alt="Prime TV" className="w-16 h-16 object-contain" />
         </div>
         <div className="text-right text-xs text-gray-500 flex flex-col justify-center">
-          <p>{new Date(article.date).toLocaleDateString('bn-BD')}</p>
-          <p>{article.category.titleBn}</p>
+          {article?.date && (
+            <p>{new Date(article.date).toLocaleDateString('bn-BD')}</p>
+          )}
+          <p>{article?.category?.titleBn || ''}</p>
         </div>
       </div>
 
       <div id="article-content" className="px-4 py-8 bg-background rounded-md">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-6">{article.title}</h1>
 
-        <div className="flex flex-col gap-2 border-b border-gray-100 pb-4 mb-6">
-          <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base">
-            <span className="font-semibold text-primary">{article.author.nameBn}</span>
-            <span>|</span>
-            <span>{article.category.titleBn}</span>
+        {(article?.author || article?.category) && (
+          <div className="flex flex-col gap-2 border-b border-gray-100 pb-4 mb-6">
+            <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base">
+              {article?.author?.nameBn && (
+                <span className="font-semibold text-primary">{article.author.nameBn}</span>
+              )}
+              {article?.author?.nameBn && article?.category?.titleBn && <span>|</span>}
+              {article?.category?.titleBn && (
+                <span>{article.category.titleBn}</span>
+              )}
+            </div>
+            {article?.date && (
+              <div className="text-gray-500 text-sm">
+                {formatDate(article.date)}
+              </div>
+            )}
           </div>
-          <div className="text-gray-500 text-sm">
-            {new Date(article.date).toLocaleDateString('bn-BD', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-            ,{' '}
-            {new Date(article.date).toLocaleTimeString('bn-BD', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+        )}
+
+        {/* Video player */}
+        {article.type !== 'photo' && embedUrl && (
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-4">
+            <iframe
+              src={embedUrl}
+              title={article.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
-        </div>
+        )}
+        {article.type !== 'photo' && mediaSource === 'do-space' && mediaUrl && (
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-4 bg-black">
+            <video
+              src={mediaUrl}
+              controls
+              className="w-full h-full"
+              poster={article?.coverImage || undefined}
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
 
-        <div className="relative w-full aspect-video object-cover rounded-lg overflow-hidden mb-4 print:max-h-87.5">
-          <img src={article.coverImage} alt={article.title} className="w-full object-cover" />
-        </div>
-        <p className="text-sm text-gray-500 mb-6">
-          {article.category.titleBn} | {article.author.nameBn}
-        </p>
+        {/* Photo gallery for photo articles */}
+        {article.type === 'photo' && article?.medias?.length > 0 && (
+          <div className="space-y-8 mb-6">
+            {article.medias.map((media, idx) => (
+              <div key={idx} className="flex flex-col gap-2">
+                <div className="relative w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={media.url}
+                    alt={media.caption || `Photo ${idx + 1}`}
+                    className="w-full h-auto object-contain max-h-[500px]"
+                    loading="lazy"
+                  />
+                </div>
+                {media.caption && (
+                  <p className="text-sm text-gray-500 italic text-center">{media.caption}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
-        <article
-          className="prose article-body text-lg prose-lg max-w-none text-gray-800 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: article.details }}
-        />
+        {/* Fallback cover image when no video */}
+        {article.type !== 'photo' && !embedUrl && mediaSource !== 'do-space' && article?.coverImage && (
+          <div className="relative w-full aspect-video object-cover rounded-lg overflow-hidden mb-4 print:max-h-87.5">
+            <img src={article.coverImage} alt={article.title} className="w-full object-cover" />
+          </div>
+        )}
+
+        {(article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
+          <p className="text-sm text-gray-500 mb-6">
+            {[article?.category?.titleBn, article?.author?.nameBn].filter(Boolean).join(' | ')}
+          </p>
+        )}
+
+        {article?.details && article.type !== 'photo' && (
+          <article
+            className="prose article-body text-lg prose-lg max-w-none text-gray-800 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: article.details }}
+          />
+        )}
       </div>
     </div>
   );
@@ -78,7 +168,7 @@ interface IProps {
   isLoading: boolean;
   data: IArticle[];
   pagination: PaginationProps;
-  pageType?: 'featured' | 'exclusive' | 'default' | 'drafted' | 'archived';
+  pageType?: 'featured' | 'exclusive' | 'default' | 'drafted' | 'archived' | 'video' | 'photo';
   meta?: {
     page: number;
     limit: number;
@@ -191,6 +281,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     position: elem?.position,
     createdAt: elem?.createdAt,
     updatedAt: elem?.updatedAt,
+    medias: elem?.medias,
   }));
 
   const columns: TableColumnsType<(typeof dataSource)[number]> = [
@@ -198,17 +289,52 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       key: 'coverImage',
       dataIndex: 'coverImage',
       title: 'Cover Image',
-      width: 80,
-      render: (coverImage) => (
-        <Image
-          src={coverImage}
-          alt="Cover"
-          width={100}
-          height={60}
-          preview
-          style={{ objectFit: 'contain', borderRadius: '4px' }}
-        />
-      ),
+      width: 100,
+      render: (coverImage, record) => {
+        let src = coverImage || '/images/placeholder.svg';
+
+        if (pageType === 'video') {
+          const medias = record?.medias;
+          const videoSource = medias?.[0]?.source;
+          const videoUrl = medias?.[0]?.url;
+
+          if (videoSource === 'youtube' && videoUrl) {
+            try {
+              const urlObj = new URL(videoUrl);
+              let videoId = '';
+              if (urlObj.hostname.includes('youtube.com')) {
+                videoId = urlObj.searchParams.get('v') || '';
+              } else if (urlObj.hostname.includes('youtu.be')) {
+                videoId = urlObj.pathname.slice(1);
+              }
+              if (videoId) {
+                src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          } else if (videoSource === 'do-space') {
+            src = coverImage || '/images/placeholder.svg';
+          } else {
+            src = '/images/placeholder.svg';
+          }
+        } else if (pageType === 'photo') {
+          const photoUrl = record?.medias?.[0]?.url;
+          src = photoUrl || coverImage || '/images/placeholder.svg';
+        }
+
+        return (
+          <Image
+            src={src}
+            alt="Cover"
+            width={100}
+            height={60}
+            preview
+            style={{ objectFit: 'contain', borderRadius: '4px' }}
+            fallback="/images/placeholder.svg"
+          />
+        );
+      },
     },
     {
       key: 'title',
@@ -236,6 +362,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       key: 'Modified',
       dataIndex: 'modified',
       title: 'Modified',
+      width: 170,
       render: (modified) => (
         <div className="flex flex-col gap-1">
           <span>
@@ -253,13 +380,32 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     {
       key: 'date',
       dataIndex: 'date',
-      title: 'Date',
-      render: (date) => (
-        <div className="flex flex-col gap-1">
-          <span>{dayjs(date).format('DD.MM.YYYY')}</span>
-          <span>{dayjs(date).format('HH:mm a')}</span>
-        </div>
-      ),
+      title: pageType === 'video' ? 'Video URL' : pageType === 'photo' ? 'Photo URL' : 'Date',
+      render: (date, record) => {
+        if (pageType === 'video' || pageType === 'photo') {
+          const mediaUrl = record?.medias?.[0]?.url;
+          return mediaUrl ? (
+            <a
+              href={mediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline break-all"
+            >
+              {mediaUrl.length > 50
+                ? `${mediaUrl.substring(0, 50)}...`
+                : mediaUrl}
+            </a>
+          ) : (
+            <span className="text-gray-400">—</span>
+          );
+        }
+        return (
+          <div className="flex flex-col gap-1">
+            <span>{dayjs(date).format('DD.MM.YYYY')}</span>
+            <span>{dayjs(date).format('HH:mm a')}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'status',

@@ -5,13 +5,6 @@ interface CompressionOptions {
   maxHeight?: number;
 }
 
-interface VideoCompressionOptions {
-  maxWidth?: number;
-  maxHeight?: number;
-  bitrate?: number;
-  frameRate?: number;
-}
-
 /**
  * Compress image to WebP format with size constraint
  */
@@ -89,186 +82,22 @@ export const compressImage = (
 };
 
 /**
- * Compress video to WebM format
- */
-export const compressVideo = (
-  file: File,
-  options: VideoCompressionOptions = {}
-): Promise<File> => {
-  const {
-    maxWidth = 1280,
-    maxHeight = 720
-  } = options;
-
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    
-    video.onloadedmetadata = () => {
-      video.currentTime = 0.1; // Seek to get first frame
-    };
-
-    video.onseeked = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate new dimensions
-      let { videoWidth, videoHeight } = video;
-      
-      if (videoWidth > maxWidth || videoHeight > maxHeight) {
-        const aspectRatio = videoWidth / videoHeight;
-        if (videoWidth > videoHeight) {
-          videoWidth = Math.min(videoWidth, maxWidth);
-          videoHeight = videoWidth / aspectRatio;
-        } else {
-          videoHeight = Math.min(videoHeight, maxHeight);
-          videoWidth = videoHeight * aspectRatio;
-        }
-      }
-
-      canvas.width = videoWidth;
-      canvas.height = videoHeight;
-      ctx?.drawImage(video, 0, 0, videoWidth, videoHeight);
-
-      // For WebM compression, we'll use a simpler approach first
-      // In a real implementation, you might want to use WebCodecs API or FFmpeg.wasm
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error('Failed to process video'));
-            return;
-          }
-
-          // For now, we'll create a WebM blob from the first frame
-          // This is a simplified version - full video compression requires more complex handling
-          const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webm'), {
-            type: 'video/webm',
-            lastModified: Date.now()
-          });
-          
-          resolve(compressedFile);
-        },
-        'video/webm',
-        0.8
-      );
-    };
-
-    video.onerror = () => reject(new Error('Failed to load video'));
-    video.src = URL.createObjectURL(file);
-  });
-};
-
-/**
- * Advanced video compression using MediaRecorder API
- */
-export const compressVideoAdvanced = (
-  file: File,
-  options: VideoCompressionOptions = {},
-  onProgress?: (progress: number) => void
-): Promise<File> => {
-  const {
-    maxWidth = 1280,
-    maxHeight = 720,
-    bitrate = 1000000,
-    frameRate = 30
-  } = options;
-
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    
-    video.onloadedmetadata = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Calculate new dimensions
-      let { videoWidth, videoHeight } = video;
-      
-      if (videoWidth > maxWidth || videoHeight > maxHeight) {
-        const aspectRatio = videoWidth / videoHeight;
-        if (videoWidth > videoHeight) {
-          videoWidth = Math.min(videoWidth, maxWidth);
-          videoHeight = videoWidth / aspectRatio;
-        } else {
-          videoHeight = Math.min(videoHeight, maxHeight);
-          videoWidth = videoHeight * aspectRatio;
-        }
-      }
-
-      canvas.width = videoWidth;
-      canvas.height = videoHeight;
-
-      const stream = canvas.captureStream(frameRate);
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm',
-        videoBitsPerSecond: bitrate
-      });
-
-      const chunks: Blob[] = [];
-      const duration = video.duration;
-      let currentTime = 0;
-      const frameInterval = 1000 / frameRate;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webm'), {
-          type: 'video/webm',
-          lastModified: Date.now()
-        });
-        resolve(compressedFile);
-      };
-
-      mediaRecorder.start();
-      video.play();
-
-      const captureFrame = () => {
-        if (currentTime >= duration) {
-          mediaRecorder.stop();
-          return;
-        }
-
-        video.currentTime = currentTime;
-        ctx?.drawImage(video, 0, 0, videoWidth, videoHeight);
-        
-        currentTime += frameInterval / 1000;
-        const progress = (currentTime / duration) * 100;
-        onProgress?.(Math.min(progress, 100));
-
-        setTimeout(captureFrame, frameInterval);
-      };
-
-      captureFrame();
-    };
-
-    video.onerror = () => reject(new Error('Failed to load video'));
-    video.src = URL.createObjectURL(file);
-  });
-};
-
-/**
  * Determine file type and compress accordingly
+ * Note: Video compression is skipped as browser-based re-encoding via
+ * MediaRecorder produces poor quality and unreliable playback.
+ * Source videos are already efficiently compressed.
  */
 export const compressFile = (
   file: File,
-  imageOptions?: CompressionOptions,
-  videoOptions?: VideoCompressionOptions,
-  onProgress?: (progress: number) => void
+  imageOptions?: CompressionOptions
 ): Promise<File> => {
   const fileType = file.type.toLowerCase();
   
   if (fileType.startsWith('image/')) {
     return compressImage(file, imageOptions);
-  } else if (fileType.startsWith('video/')) {
-    return compressVideoAdvanced(file, videoOptions, onProgress);
-  } else {
-    return Promise.resolve(file); // Return original file for non-media files
   }
+  // Videos and other files pass through uncompressed
+  return Promise.resolve(file);
 };
 
 /**

@@ -43,7 +43,7 @@ export interface ISeoMetaData {
 }
 export interface IArticle extends IBaseEntity {
   slug: string;
-  coverImage: string;
+  coverImage?: string;
   type: string;
   title: string;
   code: string;
@@ -82,17 +82,17 @@ export interface IArticlesResponse extends IBaseResponse {
 
 export interface IArticleCreate {
   slug: string;
-  coverImage: string;
+  coverImage?: string;
   type: string;
   title: string;
-  excerpt: string;
-  details: string;
-  language: string;
-  status: TArticlesStatusType;
-  position: number;
-  date: string;
-  isExclusive: boolean;
-  isFeatured: boolean;
+  excerpt?: string;
+  details?: string;
+  language?: string;
+  status?: TArticlesStatusType;
+  position?: number;
+  date?: string;
+  isExclusive?: boolean;
+  isFeatured?: boolean;
   authorId: TId;
   categoryId: TId;
   subCategoryId?: TId;
