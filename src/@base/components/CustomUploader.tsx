@@ -23,9 +23,6 @@ interface IBaseProps {
   actionPath?: string;
   enableCompression?: boolean;
   maxImageSizeKB?: number;
-  maxVideoWidth?: number;
-  maxVideoHeight?: number;
-  videoBitrate?: number;
 }
 
 interface IBasePropsWithIC extends IBaseProps {
@@ -54,9 +51,6 @@ const CustomUploader: React.FC<TProps> = ({
   actionPath,
   enableCompression = true,
   maxImageSizeKB = 132,
-  maxVideoWidth = 1280,
-  maxVideoHeight = 720,
-  videoBitrate = 1000000,
 }) => {
   const [isPreviewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>(null);
@@ -93,16 +87,9 @@ const CustomUploader: React.FC<TProps> = ({
         setIsCompressing(true);
         setCompressionProgress(0);
 
-        const compressedFile = await compressFile(
-          file,
-          { maxSizeKB: maxImageSizeKB },
-          {
-            maxWidth: maxVideoWidth,
-            maxHeight: maxVideoHeight,
-            bitrate: videoBitrate,
-          },
-          (progress) => setCompressionProgress(progress),
-        );
+        const compressedFile = await compressFile(file, {
+          maxSizeKB: maxImageSizeKB,
+        });
 
         // Replace the original file with compressed one
         Object.defineProperty(file, 'size', { value: compressedFile.size });
@@ -226,7 +213,12 @@ const CustomUploader: React.FC<TProps> = ({
           preview={{
             visible: isPreviewOpen,
             onVisibleChange: (visible) => setPreviewOpen(visible),
-            afterOpenChange: (visible) => !visible && (setPreviewImage(null) || setPreviewIsVideo(false)),
+            afterOpenChange: (visible) => {
+              if (!visible) {
+                setPreviewImage(null);
+                setPreviewIsVideo(false);
+              }
+            },
           }}
           src={previewImage}
           alt="Preview"

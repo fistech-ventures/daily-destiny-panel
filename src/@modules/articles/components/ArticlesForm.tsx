@@ -338,7 +338,7 @@ const ArticlesForm: React.FC<IProps> = ({
         form.setFieldValue("position", 0);
       }
     }
-  }, [formType, initialValues?.isFeatured, initialValues?.isExclusive, form]);
+  }, [formType, initialValues, initialValues?.isFeatured, initialValues?.isExclusive, form]);
 
   return (
     <React.Fragment>

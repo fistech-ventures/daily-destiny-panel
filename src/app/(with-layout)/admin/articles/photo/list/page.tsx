@@ -8,7 +8,7 @@ import ArticlesList from '@modules/articles/components/ArticlesList';
 import { ArticlesHooks } from '@modules/articles/lib/hooks';
 import { IArticlesFilter } from '@modules/articles/lib/interfaces';
 import WithAuthorization from '@modules/auth/components/WithAuthorization';
-import { Form, message, Tag } from 'antd';
+import { message, Tag } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 
