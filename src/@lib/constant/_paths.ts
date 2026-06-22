@@ -95,6 +95,11 @@ export const Paths = {
       root: '/admin/epapers',
       list: '/admin/epapers/list',
     },
+    epaperVisual: {
+      root: '/admin/epaper-visual',
+      list: '/admin/epaper-visual',
+      toId: (id: TId) => `/admin/epaper-visual/${id}`,
+    },
     cms: {
       root: '/admin/cms',
       menus: {

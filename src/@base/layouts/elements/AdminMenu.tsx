@@ -427,15 +427,37 @@ const AdminMenu: React.FC<IProps> = ({
           content: {
             key: Paths.admin.epapers.list,
             icon: <MdNewspaper />,
-            label: (
-              <CustomLink
-                href={Toolbox.appendPagination(Paths.admin.epapers.list)}
-              >
-                E-Papers
-              </CustomLink>
-            ),
+            label: "E-Papers",
+            children: [
+              getContentAccess({
+                content: {
+                  key: Paths.admin.epapers.list,
+                  icon: <MdNewspaper />,
+                  label: (
+                    <CustomLink
+                      href={Toolbox.appendPagination(Paths.admin.epapers.list)}
+                    >
+                      Traditional
+                    </CustomLink>
+                  ),
+                },
+                allowedAccess: ["epapers:read"],
+              }),
+              getContentAccess({
+                content: {
+                  key: Paths.admin.epaperVisual.list,
+                  icon: <RiArticleLine />,
+                  label: (
+                    <CustomLink href={Paths.admin.epaperVisual.list}>
+                      Visual
+                    </CustomLink>
+                  ),
+                },
+                allowedAccess: ["epaper-visual:read"],
+              }),
+            ],
           },
-          allowedAccess: ["epapers:read"],
+          allowedAccess: ["epapers:read", "epaper-visual:read"],
         }),
         getContentAccess({
           content: {

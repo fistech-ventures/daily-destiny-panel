@@ -100,4 +100,9 @@ export const Permissions = {
   EPAPERS_WRITE: 'epapers:write',
   EPAPERS_UPDATE: 'epapers:update',
   EPAPERS_DELETE: 'epapers:delete',
+
+  EPAPER_VISUAL_READ: 'epaper-visual:read',
+  EPAPER_VISUAL_WRITE: 'epaper-visual:write',
+  EPAPER_VISUAL_UPDATE: 'epaper-visual:update',
+  EPAPER_VISUAL_DELETE: 'epaper-visual:delete',
 } as const;

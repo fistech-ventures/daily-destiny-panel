@@ -151,7 +151,7 @@ export const DragDropProvider: React.FC<DragDropProviderProps> = ({
     }
 
     handleDragEnd();
-  }, [draggedItem, headlinesData, reportsData, onHeadlinesUpdate, onReportsUpdate, handleDragEnd, articleUpdateFn, messageApi]);
+  }, [draggedItem, headlinesData, reportsData, onHeadlinesUpdate, onReportsUpdate, handleDragEnd, articleUpdateFn, messageApi, lastUpdateTime]);
 
   const value: DragDropContextType = {
     draggedItem,
