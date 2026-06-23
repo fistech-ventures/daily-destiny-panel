@@ -64,6 +64,7 @@ export interface IArticle extends IBaseEntity {
   metaDescription: string;
   subCategoryId?: TId;
   subCategory?: ISubCategory;
+  coverImageCredit?: string;
   locationId?: TId;
   location?: ILocation;
   divisionId?: TId;

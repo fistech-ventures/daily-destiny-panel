@@ -79,7 +79,7 @@ const EditArticlePage = () => {
         metaTitle: data.metaTitle || data.seoMetaData?.title || data.title,
         metaDescription: data.metaDescription || data.seoMetaData?.description || data.excerpt,
         medias: data.medias,
-        coverImageCredit: '', // Default empty string for create form
+        coverImageCredit: data.coverImageCredit,
       });
     }
   }, [articleQuery.data?.data, formInstance]);
@@ -104,7 +104,7 @@ const EditArticlePage = () => {
                 ? parseInt(articleQuery.data?.data?.position, 10) 
                 : (articleQuery.data?.data?.position || 0),
               isActive: articleQuery.data?.data?.isActive,
-              coverImageCredit: '', // Default empty string for create form
+              coverImageCredit: articleQuery.data?.data?.coverImageCredit,
             }}
             isLoading={articleUpdateFn.isPending}
             onFinish={(values) => {

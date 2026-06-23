@@ -425,7 +425,7 @@ const AdminMenu: React.FC<IProps> = ({
         }),
         getContentAccess({
           content: {
-            key: Paths.admin.epapers.list,
+            key: Paths.admin.epapers.root,
             icon: <MdNewspaper />,
             label: "E-Papers",
             children: [

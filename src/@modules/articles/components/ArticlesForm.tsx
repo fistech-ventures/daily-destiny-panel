@@ -78,6 +78,15 @@ const ArticlesForm: React.FC<IProps> = ({
   const [districtSearchTerm, setDistrictSearchTerm] = useState(null);
   const [upazillaSearchTerm, setUpazillaSearchTerm] = useState(null);
 
+  // Watch form fields reactively for dependent dropdown queries
+  const watchedCategoryId = Form.useWatch('categoryId', form);
+  const watchedDivisionId = Form.useWatch('divisionId', form);
+  const watchedDistrictId = Form.useWatch('districtId', form);
+
+  const effectiveCategoryId = watchedCategoryId ?? initialValues?.categoryId;
+  const effectiveDivisionId = watchedDivisionId ?? initialValues?.divisionId;
+  const effectiveDistrictId = watchedDistrictId ?? initialValues?.districtId;
+
   const getFileMeta = (url: string) => {
     if (!url) return { extension: "", mimetype: "" };
     const extension = url.split(".").pop()?.toLowerCase();
@@ -232,7 +241,7 @@ const ArticlesForm: React.FC<IProps> = ({
       limit: 20,
       searchTerm: subCategorySearchTerm,
       isActive: "true",
-      categoryId: initialValues?.categoryId?.toString() || undefined,
+      categoryId: effectiveCategoryId?.toString() || undefined,
     },
   });
 
@@ -283,7 +292,7 @@ const ArticlesForm: React.FC<IProps> = ({
       searchTerm: districtSearchTerm,
       isActive: "true",
       type: "district",
-      parentId: initialValues?.divisionId || undefined,
+      parentId: effectiveDivisionId || undefined,
     },
   });
 
@@ -301,7 +310,7 @@ const ArticlesForm: React.FC<IProps> = ({
       searchTerm: upazillaSearchTerm,
       isActive: "true",
       type: "upazilla",
-      parentId: initialValues?.districtId || undefined,
+      parentId: effectiveDistrictId || undefined,
     },
   });
 
