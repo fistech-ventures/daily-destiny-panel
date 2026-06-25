@@ -1,7 +1,7 @@
-import CustomUploader from '@base/components/CustomUploader';
-import { Button, Form, InputNumber, Modal, message } from 'antd';
-import React, { useState } from 'react';
-import { CreatePagePayload } from '../lib/interfaces';
+import CustomUploader from "@base/components/CustomUploader";
+import { Button, Form, InputNumber, Modal, message } from "antd";
+import React, { useState } from "react";
+import { CreatePagePayload } from "../lib/interfaces";
 
 interface PageItem {
   id: string;
@@ -17,15 +17,21 @@ interface IProps {
   isAddingPage: boolean;
 }
 
-const PageList: React.FC<IProps> = ({ pages, activePageId, onSelectPage, onAddPage, isAddingPage }) => {
+const PageList: React.FC<IProps> = ({
+  pages,
+  activePageId,
+  onSelectPage,
+  onAddPage,
+  isAddingPage,
+}) => {
   const [, messageHolder] = message.useMessage();
   const [isModalOpen, setModalOpen] = useState(false);
   const [formInstance] = Form.useForm();
 
   const handleAddPage = (values: { pageNumber: number; imageUrl?: string }) => {
-    const url = formInstance.getFieldValue('imageUrl');
+    const url = formInstance.getFieldValue("imageUrl");
     if (!url) {
-      message.warning('Please upload an image first');
+      message.warning("Please upload an image first");
       return;
     }
     onAddPage({ pageNumber: values.pageNumber, imageUrl: url });
@@ -37,8 +43,13 @@ const PageList: React.FC<IProps> = ({ pages, activePageId, onSelectPage, onAddPa
     <React.Fragment>
       {messageHolder}
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-2">Pages</h3>
-        <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-2">
+          Pages
+        </h3>
+        <div
+          className="flex flex-col gap-2 overflow-y-auto"
+          style={{ maxHeight: "calc(100vh - 250px)" }}
+        >
           {pages
             ?.sort((a, b) => a.pageNumber - b.pageNumber)
             ?.map((page) => (
@@ -47,9 +58,10 @@ const PageList: React.FC<IProps> = ({ pages, activePageId, onSelectPage, onAddPa
                 onClick={() => onSelectPage(page.id)}
                 className={`
                   relative flex items-center gap-3 p-2 rounded-lg border-2 transition-all cursor-pointer w-full text-left
-                  ${activePageId === page.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-transparent hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  ${
+                    activePageId === page.id
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-transparent hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }
                 `}
               >
@@ -59,7 +71,8 @@ const PageList: React.FC<IProps> = ({ pages, activePageId, onSelectPage, onAddPa
                     alt={`Page ${page.pageNumber}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/images/not_found.jpg';
+                      (e.target as HTMLImageElement).src =
+                        "/images/not_found.jpg";
                     }}
                   />
                 </div>
@@ -93,35 +106,37 @@ const PageList: React.FC<IProps> = ({ pages, activePageId, onSelectPage, onAddPa
           form={formInstance}
           layout="vertical"
           onFinish={(values) => handleAddPage(values as { pageNumber: number })}
-          validateMessages={{ required: '${label} is required!' }}
+          validateMessages={{ required: "${label} is required!" }}
         >
           <Form.Item
             name="pageNumber"
             label="Page Number"
-            rules={[{ required: true, message: 'Page number is required!' }]}
+            rules={[{ required: true, message: "Page number is required!" }]}
           >
             <InputNumber className="w-full" min={1} />
           </Form.Item>
           <Form.Item
             name="imageUrl"
             label="Page Image"
-            rules={[{ required: true, message: 'Page image is required!' }]}
+            rules={[{ required: true, message: "Page image is required!" }]}
           >
             <CustomUploader
               listType="picture-card"
               maxCount={1}
-              maxImageSizeKB={3072}
+              maxImageSizeKB={5120}
               sizeLimit={50}
-              acceptedTypes={['jpg', 'jpeg', 'png', 'webp']}
+              acceptedTypes={["jpg", "jpeg", "png", "webp"]}
               onChange={(urls) => {
                 if (urls.length > 0) {
-                  formInstance.setFieldValue('imageUrl', urls[0]);
+                  formInstance.setFieldValue("imageUrl", urls[0]);
                 }
               }}
             />
           </Form.Item>
           <Form.Item className="!mb-0 text-right">
-            <Button onClick={() => setModalOpen(false)} className="mr-2">Cancel</Button>
+            <Button onClick={() => setModalOpen(false)} className="mr-2">
+              Cancel
+            </Button>
             <Button type="primary" htmlType="submit" loading={isAddingPage}>
               Add Page
             </Button>
