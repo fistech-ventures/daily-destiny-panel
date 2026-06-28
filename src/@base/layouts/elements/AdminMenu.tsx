@@ -461,6 +461,20 @@ const AdminMenu: React.FC<IProps> = ({
         }),
         getContentAccess({
           content: {
+            key: Paths.admin.specialEvents.list,
+            icon: <MdLabelImportantOutline />,
+            label: (
+              <CustomLink
+                href={Toolbox.appendPagination(Paths.admin.specialEvents.list)}
+              >
+                Special Events
+              </CustomLink>
+            ),
+          },
+          allowedAccess: ["special-events:read"],
+        }),
+        getContentAccess({
+          content: {
             key: Paths.admin.settings.root,
             icon: <FaTools />,
             label: (

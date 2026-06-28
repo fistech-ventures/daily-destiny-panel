@@ -106,4 +106,9 @@ export const Permissions = {
   EPAPER_VISUAL_WRITE: 'epaper-visual:write',
   EPAPER_VISUAL_UPDATE: 'epaper-visual:update',
   EPAPER_VISUAL_DELETE: 'epaper-visual:delete',
+
+  SPECIAL_EVENTS_READ: 'special-events:read',
+  SPECIAL_EVENTS_WRITE: 'special-events:write',
+  SPECIAL_EVENTS_UPDATE: 'special-events:update',
+  SPECIAL_EVENTS_DELETE: 'special-events:delete',
 } as const;
