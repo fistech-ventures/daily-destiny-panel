@@ -104,4 +104,6 @@ const EpaperVisualPage = () => {
   );
 };
 
-export default WithAuthorization(EpaperVisualPage, { allowedAccess: ['epaper-visual:read'] });
+export default WithAuthorization(EpaperVisualPage, {
+  allowedAccess: ['epaper-visual:read', 'epaper-visual:write', 'epaper-visual:update', 'epaper-visual:delete', 'epapers:read', 'epapers:write', 'epapers:update', 'epapers:delete'],
+});
