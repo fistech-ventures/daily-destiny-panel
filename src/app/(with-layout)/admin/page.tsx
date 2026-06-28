@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import WithAuthorization from "@modules/auth/components/WithAuthorization";
 import { ArticlesHooks } from "@modules/articles/lib/hooks";
 // import TodayHeadlines from "./components/TodayHeadlines";
 // import SpecialReports from "./components/SpecialReports";
@@ -69,4 +70,6 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default WithAuthorization(DashboardPage, {
+  allowedAccess: ['articles:read', 'articles:write', 'articles:update', 'articles:delete'],
+});
