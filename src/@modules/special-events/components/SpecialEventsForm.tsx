@@ -109,7 +109,7 @@ const SpecialEventsForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
                 maxCount={1}
                 acceptedTypes={['jpg', 'jpeg', 'png', 'webp']}
                 initialValues={initialValues?.bannerImage ? [initialValues.bannerImage] : []}
-                onChange={(urls, data) => {
+                onChange={(urls) => {
                   if (urls.length > 0) {
                     form.setFieldValue('bannerImage', urls[0]);
                   }

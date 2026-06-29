@@ -453,11 +453,29 @@ const AdminMenu: React.FC<IProps> = ({
                     </CustomLink>
                   ),
                 },
-                allowedAccess: ["epaper-visual:read", "epaper-visual:write", "epaper-visual:update", "epaper-visual:delete", "epapers:read", "epapers:write", "epapers:update", "epapers:delete"],
+                allowedAccess: [
+                  "epaper-visual:read",
+                  "epaper-visual:write",
+                  "epaper-visual:update",
+                  "epaper-visual:delete",
+                  "epapers:read",
+                  "epapers:write",
+                  "epapers:update",
+                  "epapers:delete",
+                ],
               }),
             ],
           },
-          allowedAccess: ["epapers:read", "epapers:write", "epapers:update", "epapers:delete", "epaper-visual:read", "epaper-visual:write", "epaper-visual:update", "epaper-visual:delete"],
+          allowedAccess: [
+            "epapers:read",
+            "epapers:write",
+            "epapers:update",
+            "epapers:delete",
+            "epaper-visual:read",
+            "epaper-visual:write",
+            "epaper-visual:update",
+            "epaper-visual:delete",
+          ],
         }),
         getContentAccess({
           content: {
