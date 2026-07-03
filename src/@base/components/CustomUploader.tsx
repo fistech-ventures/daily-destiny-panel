@@ -23,6 +23,10 @@ interface IBaseProps {
   actionPath?: string;
   enableCompression?: boolean;
   maxImageSizeKB?: number;
+  /** Max width for compression (default: 4096) */
+  maxImageWidth?: number;
+  /** Max height for compression (default: 4096) */
+  maxImageHeight?: number;
 }
 
 interface IBasePropsWithIC extends IBaseProps {
@@ -50,7 +54,9 @@ const CustomUploader: React.FC<TProps> = ({
   onChange,
   actionPath,
   enableCompression = true,
-  maxImageSizeKB = 132,
+  maxImageSizeKB = 5120,
+  maxImageWidth,
+  maxImageHeight,
 }) => {
   const [isPreviewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string>(null);
@@ -89,6 +95,8 @@ const CustomUploader: React.FC<TProps> = ({
 
         const compressedFile = await compressFile(file, {
           maxSizeKB: maxImageSizeKB,
+          maxWidth: maxImageWidth,
+          maxHeight: maxImageHeight,
         });
 
         // Replace the original file with compressed one

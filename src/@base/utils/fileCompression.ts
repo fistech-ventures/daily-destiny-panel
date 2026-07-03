@@ -7,16 +7,18 @@ interface CompressionOptions {
 
 /**
  * Compress image to WebP format with size constraint
+ * For high-resolution images (e.g. newspaper pages), set maxSizeKB higher
+ * and maxWidth/maxHeight larger to preserve quality.
  */
 export const compressImage = (
   file: File,
   options: CompressionOptions = {}
 ): Promise<File> => {
   const {
-    maxSizeKB = 132,
-    quality = 0.9,
-    maxWidth = 1920,
-    maxHeight = 1080
+    maxSizeKB = 5120,
+    quality = 0.92,
+    maxWidth = 4096,
+    maxHeight = 4096
   } = options;
 
   return new Promise((resolve, reject) => {
