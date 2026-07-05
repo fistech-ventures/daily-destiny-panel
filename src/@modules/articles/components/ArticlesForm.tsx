@@ -519,6 +519,17 @@ const ArticlesForm: React.FC<IProps> = ({
               </Form.Item>
             </Col>
           )}
+               {["news", "series", "stories"].includes(currentType) && (
+            <Col xs={24}>
+              <Form.Item
+                name="details"
+                rules={[{ required: true, message: "Content is required!" }]}
+                className="!mb-0"
+              >
+                <RichTextEditor placeholder="Content" />
+              </Form.Item>
+            </Col>
+          )}
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24}>
@@ -750,17 +761,7 @@ const ArticlesForm: React.FC<IProps> = ({
             </Col>
           )}
 
-          {["news", "series", "stories"].includes(currentType) && (
-            <Col xs={24}>
-              <Form.Item
-                name="details"
-                rules={[{ required: true, message: "Content is required!" }]}
-                className="!mb-0"
-              >
-                <RichTextEditor placeholder="Content" />
-              </Form.Item>
-            </Col>
-          )}
+     
 
           {currentType === "video" && (
             <Col xs={24}>
