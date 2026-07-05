@@ -113,7 +113,7 @@ const EditionDetailPage = () => {
       ) : edition ? (
         <div className="flex gap-4" style={{ minHeight: 'calc(100vh - 200px)' }}>
           {/* Left sidebar - Page thumbnails */}
-          <div className="w-56 flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+          <div className="w-56 shrink-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
             <PageList
               pages={sortedPages}
               activePageId={activePageId}

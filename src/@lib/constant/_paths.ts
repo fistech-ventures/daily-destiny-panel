@@ -100,6 +100,10 @@ export const Paths = {
       list: '/admin/epaper-visual',
       toId: (id: TId) => `/admin/epaper-visual/${id}`,
     },
+    specialEvents: {
+      root: '/admin/special-events',
+      list: '/admin/special-events/list',
+    },
     cms: {
       root: '/admin/cms',
       menus: {
