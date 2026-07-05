@@ -120,6 +120,7 @@ const EditionDetailPage = () => {
               onSelectPage={setActivePageId}
               onAddPage={handleAddPage}
               isAddingPage={addPageFn.isPending}
+              editionDate={edition?.publishDate}
             />
           </div>
 

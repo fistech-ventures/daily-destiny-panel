@@ -161,6 +161,7 @@ const EpapersBulkUploadForm: React.FC<IProps> = ({
                   <CustomUploader
                     listType="picture-card"
                     maxCount={1}
+                    enableCompression={false}
                     acceptedTypes={['jpg', 'jpeg', 'png', 'webp']}
                     initialValues={page.imageUrl ? [page.imageUrl] : []}
                     onChange={(urls, data) => {
