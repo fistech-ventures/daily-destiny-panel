@@ -37,7 +37,10 @@ interface IProps {
   isLoading: boolean;
   form: FormInstance;
   formType?: "create" | "update";
-  initialValues?: Partial<IArticleCreate>;
+  initialValues?: Partial<IArticleCreate> & {
+    categories?: ICategory[];
+    subCategories?: ISubCategory[];
+  };
   onFinish: (values: IArticleCreate) => void;
   shouldReset?: boolean;
   backendError?: string | null;
@@ -79,11 +82,11 @@ const ArticlesForm: React.FC<IProps> = ({
   const [upazillaSearchTerm, setUpazillaSearchTerm] = useState(null);
 
   // Watch form fields reactively for dependent dropdown queries
-  const watchedCategoryId = Form.useWatch('categoryId', form);
-  const watchedDivisionId = Form.useWatch('divisionId', form);
-  const watchedDistrictId = Form.useWatch('districtId', form);
+  const watchedCategoryIds = Form.useWatch("categoryIds", form);
+  const watchedDivisionId = Form.useWatch("divisionId", form);
+  const watchedDistrictId = Form.useWatch("districtId", form);
 
-  const effectiveCategoryId = watchedCategoryId ?? initialValues?.categoryId;
+  const effectiveCategoryIds = watchedCategoryIds ?? [];
   const effectiveDivisionId = watchedDivisionId ?? initialValues?.divisionId;
   const effectiveDistrictId = watchedDistrictId ?? initialValues?.districtId;
 
@@ -209,16 +212,26 @@ const ArticlesForm: React.FC<IProps> = ({
         .filter(Boolean);
     }
 
+    // Resolve plain-text author: if authorName is provided without a selected authorId, use it
+    if (values.authorName && !values.authorId) {
+      values.authorId = values.authorName;
+    }
+    delete values.authorName;
+
+    // Map leadType string to isExclusive boolean + position
+    if (values.leadType === "lead") {
+      values.isExclusive = true;
+    } else if (values.leadType === "second-lead") {
+      values.isExclusive = true;
+      values.position = 2;
+    } else if (values.leadType === "non-lead") {
+      values.isExclusive = false;
+      values.position = 0;
+    }
+    delete values.leadType;
+
     onFinish(values);
   };
-
-  const categoryQuery = CategoriesHooks.useFindById({
-    id: initialValues?.categoryId,
-    config: {
-      queryKey: [],
-      enabled: !!initialValues?.categoryId,
-    },
-  });
 
   const categoriesQuery = CategoriesHooks.useFindInfinite({
     options: {
@@ -228,20 +241,19 @@ const ArticlesForm: React.FC<IProps> = ({
     },
   });
 
-  const subCategoryQuery = SubCategoriesHooks.useFindById({
-    id: initialValues?.subCategoryId,
-    config: {
-      queryKey: [],
-      enabled: !!initialValues?.subCategoryId,
-    },
-  });
-
   const subCategoriesQuery = SubCategoriesHooks.useFindInfinite({
     options: {
       limit: 20,
       searchTerm: subCategorySearchTerm,
       isActive: "true",
-      categoryId: effectiveCategoryId?.toString() || undefined,
+      categoryId:
+        effectiveCategoryIds.length === 1
+          ? String(effectiveCategoryIds[0])
+          : undefined,
+      categoryIds:
+        effectiveCategoryIds.length > 1
+          ? effectiveCategoryIds.map(String)
+          : undefined,
     },
   });
 
@@ -339,15 +351,21 @@ const ArticlesForm: React.FC<IProps> = ({
         form.setFieldValue("position", 0);
       }
 
-      // Check if isExclusive changed from true to false
+      // Check if leadType changed from lead/second-lead to non-lead
       if (
         initialValues.isExclusive === true &&
-        currentValues.isExclusive === false
+        currentValues.leadType === "non-lead"
       ) {
         form.setFieldValue("position", 0);
       }
     }
-  }, [formType, initialValues, initialValues?.isFeatured, initialValues?.isExclusive, form]);
+  }, [
+    formType,
+    initialValues,
+    initialValues?.isFeatured,
+    initialValues?.isExclusive,
+    form,
+  ]);
 
   return (
     <React.Fragment>
@@ -359,6 +377,12 @@ const ArticlesForm: React.FC<IProps> = ({
         form={form}
         initialValues={{
           ...initialValues,
+          leadType:
+            initialValues?.isExclusive === true
+              ? initialValues?.position === 2
+                ? "second-lead"
+                : "lead"
+              : "non-lead",
           metaTitle:
             initialValues?.metaTitle ||
             initialValues?.seoMetaData?.title ||
@@ -411,11 +435,59 @@ const ArticlesForm: React.FC<IProps> = ({
                   </Button> */}
                 </Space>
               </Form.Item>
-              <Form.Item name="position" initialValue={0} className="!mb-0 !mt-3">
+              <Form.Item
+                name="position"
+                initialValue={0}
+                className="!mb-0 !mt-3"
+              >
                 <FloatInput placeholder="Position" type="number" />
               </Form.Item>
             </Col>
           )}
+
+          {currentType !== "video" &&
+            currentType !== "photo" &&
+            formType !== "create" && (
+              <Col xs={24} sm={12}>
+                <Form.Item
+                  name="type"
+                  rules={[{ required: true, message: "Type is required!" }]}
+                  className="!mb-0"
+                >
+                  <FloatSelect
+                    placeholder="Type"
+                    disabled={initialValues?.type !== undefined}
+                    options={[
+                      { value: "news", label: "News" },
+                      { value: "series", label: "Series" },
+                      { value: "stories", label: "Stories" },
+                      { value: "photo", label: "Photo" },
+                      { value: "video", label: "Video" },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+            )}
+          {(currentType === "video" ||
+            currentType === "photo" ||
+            formType === "create") && (
+            <Form.Item name="type" hidden>
+              <input />
+            </Form.Item>
+          )}
+
+          {["news", "series", "stories"].includes(currentType) && (
+            <Col xs={24}>
+              <Form.Item
+                name="details"
+                rules={[{ required: true, message: "Content is required!" }]}
+                className="!mb-0"
+              >
+                <RichTextEditor placeholder="Content" />
+              </Form.Item>
+            </Col>
+          )}
+
           {currentType !== "video" && (
             <Col xs={24} sm={12}>
               <Form.Item
@@ -438,32 +510,6 @@ const ArticlesForm: React.FC<IProps> = ({
             </Col>
           )}
 
-          {currentType !== "video" && currentType !== "photo" && formType !== "create" && (
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="type"
-                rules={[{ required: true, message: "Type is required!" }]}
-                className="!mb-0"
-              >
-                <FloatSelect
-                  placeholder="Type"
-                  disabled={initialValues?.type !== undefined}
-                  options={[
-                    { value: "news", label: "News" },
-                    { value: "series", label: "Series" },
-                    { value: "stories", label: "Stories" },
-                    { value: "photo", label: "Photo" },
-                    { value: "video", label: "Video" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          )}
-          {(currentType === "video" || currentType === "photo" || formType === "create") && (
-            <Form.Item name="type" hidden>
-              <input />
-            </Form.Item>
-          )}
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={12}>
               <Form.Item
@@ -519,17 +565,6 @@ const ArticlesForm: React.FC<IProps> = ({
               </Form.Item>
             </Col>
           )}
-               {["news", "series", "stories"].includes(currentType) && (
-            <Col xs={24}>
-              <Form.Item
-                name="details"
-                rules={[{ required: true, message: "Content is required!" }]}
-                className="!mb-0"
-              >
-                <RichTextEditor placeholder="Content" />
-              </Form.Item>
-            </Col>
-          )}
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24}>
@@ -538,16 +573,16 @@ const ArticlesForm: React.FC<IProps> = ({
                 rules={[{ required: true, message: "Excerpt is required!" }]}
                 className="!mb-0"
               >
-              <FloatTextarea
-                placeholder="Excerpt"
-                autoSize={{ maxRows: 3 }}
-                onKeyUp={(e) => {
-                  const val = (e.target as HTMLTextAreaElement).value;
-                  setTimeout(() => {
-                    form.setFieldValue("metaDescription", val);
-                  }, 0);
-                }}
-              />
+                <FloatTextarea
+                  placeholder="Excerpt"
+                  autoSize={{ maxRows: 3 }}
+                  onKeyUp={(e) => {
+                    const val = (e.target as HTMLTextAreaElement).value;
+                    setTimeout(() => {
+                      form.setFieldValue("metaDescription", val);
+                    }, 0);
+                  }}
+                />
               </Form.Item>
             </Col>
           )}
@@ -598,7 +633,7 @@ const ArticlesForm: React.FC<IProps> = ({
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={12}>
               <Form.Item
-                name="categoryId"
+                name="categoryIds"
                 rules={[{ required: true, message: "Category is required!" }]}
                 className="!mb-0"
               >
@@ -607,12 +642,9 @@ const ArticlesForm: React.FC<IProps> = ({
                   allowClear
                   showSearch
                   virtual={false}
+                  mode="multiple"
                   placeholder="Category"
-                  initialOptions={
-                    categoryQuery.data?.data?.id
-                      ? [categoryQuery.data?.data]
-                      : []
-                  }
+                  initialOptions={initialValues?.categories || []}
                   option={({ item: category }) => ({
                     key: category?.id,
                     label: `${category?.title} (${category?.titleBn})`,
@@ -629,7 +661,7 @@ const ArticlesForm: React.FC<IProps> = ({
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={12}>
               <Form.Item
-                name="subCategoryId"
+                name="subCategoryIds"
                 className="!mb-0"
                 rules={[{ required: false }]}
               >
@@ -638,12 +670,9 @@ const ArticlesForm: React.FC<IProps> = ({
                   allowClear
                   showSearch
                   virtual={false}
+                  mode="multiple"
                   placeholder="Sub Category (Optional)"
-                  initialOptions={
-                    subCategoryQuery.data?.data?.id
-                      ? [subCategoryQuery.data?.data]
-                      : []
-                  }
+                  initialOptions={initialValues?.subCategories || []}
                   option={({ item: subCategory }) => ({
                     key: subCategory?.id,
                     label: subCategory?.title,
@@ -653,7 +682,7 @@ const ArticlesForm: React.FC<IProps> = ({
                     setSubCategorySearchTerm(searchTerm)
                   }
                   query={subCategoriesQuery}
-                  disabled={!form.getFieldValue("categoryId")}
+                  disabled={!effectiveCategoryIds.length}
                 />
               </Form.Item>
             </Col>
@@ -760,8 +789,6 @@ const ArticlesForm: React.FC<IProps> = ({
               </Form.Item>
             </Col>
           )}
-
-     
 
           {currentType === "video" && (
             <Col xs={24}>
@@ -903,17 +930,13 @@ const ArticlesForm: React.FC<IProps> = ({
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="authorId"
-                rules={[{ required: true, message: "Author is required!" }]}
-                className="!mb-0"
-              >
+              <Form.Item name="authorId" className="!mb-0">
                 <InfiniteScrollSelect<IAuthor>
                   isFloat
                   allowClear
                   showSearch
                   virtual={false}
-                  placeholder="Author"
+                  placeholder="Select existing author"
                   initialOptions={
                     authorQuery.data?.data?.id ? [authorQuery.data?.data] : []
                   }
@@ -928,6 +951,13 @@ const ArticlesForm: React.FC<IProps> = ({
                   query={authorsQuery}
                 />
               </Form.Item>
+              <Form.Item
+                name="authorName"
+                className="!mb-0 !mt-2"
+                dependencies={["authorId"]}
+              >
+                <FloatInput placeholder="Or type a new author name to auto-create" />
+              </Form.Item>
             </Col>
           )}
           {currentType !== "video" && currentType !== "photo" && (
@@ -940,12 +970,15 @@ const ArticlesForm: React.FC<IProps> = ({
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={8}>
-              <Form.Item name="isExclusive" className="!mb-0">
+              <Form.Item name="leadType" className="!mb-0">
                 <Radio.Group buttonStyle="solid" className="w-full text-center">
-                  <Radio.Button className="w-1/2" value={true}>
+                  <Radio.Button className="w-1/3" value="lead">
                     Lead
                   </Radio.Button>
-                  <Radio.Button className="w-1/2" value={false}>
+                  <Radio.Button className="w-1/3" value="second-lead">
+                    2nd Lead
+                  </Radio.Button>
+                  <Radio.Button className="w-1/3" value="non-lead">
                     Non Lead
                   </Radio.Button>
                 </Radio.Group>
@@ -966,7 +999,10 @@ const ArticlesForm: React.FC<IProps> = ({
               </Form.Item>
             </Col>
           )}
-          <Col xs={24} sm={currentType === "video" || currentType === "photo" ? 24 : 8}>
+          <Col
+            xs={24}
+            sm={currentType === "video" || currentType === "photo" ? 24 : 8}
+          >
             <Form.Item name="isActive" className="!mb-0">
               <Radio.Group buttonStyle="solid" className="w-full text-center">
                 <Radio.Button className="w-1/2" value={true}>
@@ -1011,28 +1047,24 @@ const ArticlesForm: React.FC<IProps> = ({
                                   listType="picture-card"
                                   maxCount={1}
                                   innerContent="Photo"
-                                  acceptedTypes={[
-                                    "jpg",
-                                    "jpeg",
-                                    "png",
-                                    "webp",
-                                  ]}
-                                  initialValues={photoMediaInitialValues[name]}                                    onChange={(urls, dataObjects) => {
+                                  acceptedTypes={["jpg", "jpeg", "png", "webp"]}
+                                  initialValues={photoMediaInitialValues[name]}
+                                  onChange={(urls, dataObjects) => {
+                                    form.setFieldValue(
+                                      ["medias", name, "url"],
+                                      urls[0] || null,
+                                    );
+                                    form.setFieldValue(
+                                      ["medias", name, "source"],
+                                      "do-space",
+                                    );
+                                    if (dataObjects?.[0]?.key) {
                                       form.setFieldValue(
-                                        ["medias", name, "url"],
-                                        urls[0] || null,
+                                        ["medias", name, "key"],
+                                        dataObjects[0].key,
                                       );
-                                      form.setFieldValue(
-                                        ["medias", name, "source"],
-                                        "do-space",
-                                      );
-                                      if (dataObjects?.[0]?.key) {
-                                        form.setFieldValue(
-                                          ["medias", name, "key"],
-                                          dataObjects[0].key,
-                                        );
-                                      }
-                                    }}
+                                    }
+                                  }}
                                 />
                               </Form.Item>
                             </Col>
@@ -1074,7 +1106,9 @@ const ArticlesForm: React.FC<IProps> = ({
                       ))}
                       <Button
                         type="dashed"
-                        onClick={() => add({ url: null, caption: "", source: "do-space" })}
+                        onClick={() =>
+                          add({ url: null, caption: "", source: "do-space" })
+                        }
                         block
                         icon={<AiOutlinePlus />}
                       >
@@ -1108,18 +1142,15 @@ const ArticlesForm: React.FC<IProps> = ({
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item name="categoryId" className="!mb-0">
+                <Form.Item name="categoryIds" className="!mb-0">
                   <InfiniteScrollSelect<ICategory>
                     isFloat
                     allowClear
                     showSearch
                     virtual={false}
+                    mode="multiple"
                     placeholder="Category (Optional)"
-                    initialOptions={
-                      categoryQuery.data?.data?.id
-                        ? [categoryQuery.data?.data]
-                        : []
-                    }
+                    initialOptions={initialValues?.categories || []}
                     option={({ item: category }) => ({
                       key: category?.id,
                       label: `${category?.title} (${category?.titleBn})`,
@@ -1133,18 +1164,15 @@ const ArticlesForm: React.FC<IProps> = ({
                 </Form.Item>
               </Col>
               <Col xs={24} sm={12}>
-                <Form.Item name="subCategoryId" className="!mb-0">
+                <Form.Item name="subCategoryIds" className="!mb-0">
                   <InfiniteScrollSelect<ISubCategory>
                     isFloat
                     allowClear
                     showSearch
                     virtual={false}
+                    mode="multiple"
                     placeholder="Sub Category (Optional)"
-                    initialOptions={
-                      subCategoryQuery.data?.data?.id
-                        ? [subCategoryQuery.data?.data]
-                        : []
-                    }
+                    initialOptions={initialValues?.subCategories || []}
                     option={({ item: subCategory }) => ({
                       key: subCategory?.id,
                       label: subCategory?.title,
@@ -1154,7 +1182,7 @@ const ArticlesForm: React.FC<IProps> = ({
                       setSubCategorySearchTerm(searchTerm)
                     }
                     query={subCategoriesQuery}
-                    disabled={!form.getFieldValue("categoryId")}
+                    disabled={!effectiveCategoryIds.length}
                   />
                 </Form.Item>
               </Col>

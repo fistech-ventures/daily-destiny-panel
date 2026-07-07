@@ -81,8 +81,11 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
               {article?.author?.nameBn && (
                 <span className="font-semibold text-primary">{article.author.nameBn}</span>
               )}
-              {article?.author?.nameBn && article?.category?.titleBn && <span>|</span>}
-              {article?.category?.titleBn && (
+              {article?.author?.nameBn && (article?.categories?.length || article?.category) && <span>|</span>}
+              {(article?.categories?.length > 0) && (
+                <span>{article.categories.map((c) => c?.titleBn || c?.title).join(', ')}</span>
+              )}
+              {!article?.categories?.length && article?.category?.titleBn && (
                 <span>{article.category.titleBn}</span>
               )}
             </div>
@@ -147,9 +150,14 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
           </div>
         )}
 
-        {(article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
+        {(article?.categories?.length || article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
           <p className="text-sm text-gray-500 mb-6">
-            {[article?.category?.titleBn, article?.author?.nameBn].filter(Boolean).join(' | ')}
+            {[
+              article?.categories?.length
+                ? article.categories.map((c) => c?.titleBn || c?.title).join(', ')
+                : article?.category?.titleBn,
+              article?.author?.nameBn
+            ].filter(Boolean).join(' | ')}
           </p>
         )}
 
@@ -266,6 +274,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     coverImage: elem?.coverImage,
     title: elem?.title,
     code: elem?.code,
+    categories: elem?.categories,
     category: elem?.category,
     modified: {
       author: elem?.author?.name,
@@ -348,35 +357,42 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       title: 'Code',
     },
     {
-      key: 'category',
-      dataIndex: 'category',
-      title: 'Category',
-      render: (category) => (
-        <div className="flex flex-col gap-1">
-          <span>{category?.title}</span>
-          <span>{category?.titleBn}</span>
-        </div>
-      ),
+      key: 'categories',
+      dataIndex: 'categories',
+      title: 'Categories',
+      width: 200,
+      render: (categories, record) => {
+        const cats = categories?.length ? categories : (record?.category ? [record.category] : []);
+        return (
+          <div className="flex flex-col gap-1">
+            {cats?.map((cat) => (
+              <Tag key={cat?.id} className="!mr-1 !mb-1">
+                {cat?.title || cat?.titleBn}
+              </Tag>
+            ))}
+          </div>
+        );
+      },
     },
-    {
-      key: 'Modified',
-      dataIndex: 'modified',
-      title: 'Modified',
-      width: 170,
-      render: (modified) => (
-        <div className="flex flex-col gap-1">
-          <span>
-            A: <b>{modified?.author}</b>
-          </span>
-          <span>
-            C: <b>{modified?.createdBy}</b>
-          </span>
-          <span>
-            P: <b>{modified?.publishedBy}</b>
-          </span>
-        </div>
-      ),
-    },
+    // {
+    //   key: 'Modified',
+    //   dataIndex: 'modified',
+    //   title: 'Modified',
+    //   width: 170,
+    //   render: (modified) => (
+    //     <div className="flex flex-col gap-1">
+    //       <span>
+    //         A: <b>{modified?.author}</b>
+    //       </span>
+    //       <span>
+    //         C: <b>{modified?.createdBy}</b>
+    //       </span>
+    //       <span>
+    //         P: <b>{modified?.publishedBy}</b>
+    //       </span>
+    //     </div>
+    //   ),
+    // },
     {
       key: 'date',
       dataIndex: 'date',

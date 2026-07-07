@@ -12,11 +12,13 @@ export interface IArticlesFilter extends IBaseFilter {
   status?: string;
   isFeatured?: boolean;
   categoryId?: TId;
+  categoryIds?: TId[];
   authorId?: TId;
   createdById?: TId;
   updatedById?: TId;
   publishedById?: TId;
   subCategoryId?: TId;
+  subCategoryIds?: TId[];
   locationId?: TId;
   divisionId?: TId;
   districtId?: TId;
@@ -59,11 +61,13 @@ export interface IArticle extends IBaseEntity {
   author: IAuthor;
   categoryId: TId;
   category: ICategory;
+  categories?: ICategory[];
   tags: string[];
   metaTitle: string;
   metaDescription: string;
   subCategoryId?: TId;
   subCategory?: ISubCategory;
+  subCategories?: ISubCategory[];
   coverImageCredit?: string;
   locationId?: TId;
   location?: ILocation;
@@ -95,8 +99,9 @@ export interface IArticleCreate {
   isExclusive?: boolean;
   isFeatured?: boolean;
   authorId: TId;
-  categoryId: TId;
+  categoryIds?: TId[];
   subCategoryId?: TId;
+  subCategoryIds?: TId[];
   locationId?: TId;
   divisionId?: TId;
   districtId?: TId;

@@ -32,7 +32,9 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
 
   const [categorySearchTerm, setCategorySearchTerm] = useState<string | null>(null);
   const [subCategorySearchTerm, setSubCategorySearchTerm] = useState<string | null>(null);
-  const categoryId = Form.useWatch('categoryId', formInstance);
+  const watchedCategoryIds = Form.useWatch('categoryIds', formInstance);
+  const watchedCategoryId = Form.useWatch('categoryId', formInstance);
+  const effectiveCategoryIds = [...(watchedCategoryIds ?? []), ...(watchedCategoryId ? [watchedCategoryId] : [])];
   const [authorSearchTerm, setAuthorSearchTerm] = useState<string | null>(null);
   const [createdByUserSearchTerm, setCreatedByUserSearchTerm] = useState<string | null>(null);
   const [updatedByUserSearchTerm, setUpdatedByUserSearchTerm] = useState<string | null>(null);
@@ -48,7 +50,13 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
   });
 
   const subCategoriesQuery = SubCategoriesHooks.useFindInfinite({
-    options: { limit: 20, searchTerm: subCategorySearchTerm, isActive: 'true', categoryId: categoryId || undefined },
+    options: {
+      limit: 20,
+      searchTerm: subCategorySearchTerm,
+      isActive: 'true',
+      categoryId: effectiveCategoryIds.length === 1 ? String(effectiveCategoryIds[0]) : undefined,
+      categoryIds: effectiveCategoryIds.length > 1 ? effectiveCategoryIds.map(String) : undefined,
+    },
   });
 
   const authorsQuery = AuthorsHooks.useFindInfinite({
@@ -88,7 +96,9 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       type: '',
       status: '',
       categoryId: undefined,
+      categoryIds: undefined,
       subCategoryId: undefined,
+      subCategoryIds: undefined,
       authorId: undefined,
       createdById: undefined,
       updatedById: undefined,
@@ -192,12 +202,13 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
             </Col>
 
             <Col span={24}>
-              <Form.Item name="categoryId" label="Category" className="!mb-0">
+              <Form.Item name="categoryIds" label="Categories" className="!mb-0">
                 <InfiniteScrollSelect<ICategory>
                   allowClear
                   showSearch
                   virtual={false}
-                  placeholder="Filter by Category"
+                  mode="multiple"
+                  placeholder="Filter by Categories"
                   option={({ item: category }) => ({
                     key: category?.id,
                     label: category?.title,
@@ -210,12 +221,13 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
             </Col>
 
             <Col span={24}>
-              <Form.Item name="subCategoryId" label="Sub Category" className="!mb-0">
+              <Form.Item name="subCategoryIds" label="Sub Categories" className="!mb-0">
                 <InfiniteScrollSelect<ISubCategory>
                   allowClear
                   showSearch
                   virtual={false}
-                  placeholder="Filter by Sub Category"
+                  mode="multiple"
+                  placeholder="Filter by Sub Categories"
                   option={({ item: subCategory }) => ({
                     key: subCategory?.id,
                     label: subCategory?.title,
@@ -223,7 +235,7 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
                   })}
                   onChangeSearchTerm={(searchTerm) => setSubCategorySearchTerm(searchTerm)}
                   query={subCategoriesQuery}
-                  disabled={!categoryId}
+                  disabled={!effectiveCategoryIds.length}
                 />
               </Form.Item>
             </Col>

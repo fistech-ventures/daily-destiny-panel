@@ -2,7 +2,8 @@ import { IBaseEntity, IBaseFilter, IBaseResponse, TId } from '@base/interfaces';
 import { ICategory } from '@modules/categories/lib/interfaces';
 
 export interface ISubCategoriesFilter extends IBaseFilter {
-  categoryId?: string;
+  categoryId?: string | string[];
+  categoryIds?: string[];
 }
 
 export interface ISubCategory extends IBaseEntity {
