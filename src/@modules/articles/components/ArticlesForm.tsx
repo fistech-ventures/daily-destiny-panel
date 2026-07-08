@@ -221,6 +221,7 @@ const ArticlesForm: React.FC<IProps> = ({
     // Map leadType string to isExclusive boolean + position
     if (values.leadType === "lead") {
       values.isExclusive = true;
+      values.position = 1;
     } else if (values.leadType === "second-lead") {
       values.isExclusive = true;
       values.position = 2;
@@ -489,7 +490,7 @@ const ArticlesForm: React.FC<IProps> = ({
           )}
 
           {currentType !== "video" && (
-            <Col xs={24} sm={12}>
+            <Col xs={24}>
               <Form.Item
                 name="coverImage"
                 rules={
@@ -930,7 +931,21 @@ const ArticlesForm: React.FC<IProps> = ({
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24} sm={12}>
-              <Form.Item name="authorId" className="!mb-0">
+              <Form.Item
+                name="authorId"
+                className="!mb-0"
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      const authorName = form.getFieldValue('authorName');
+                      if (!value && !authorName) {
+                        return Promise.reject(new Error('Author is required (select existing or type new name)'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
+              >
                 <InfiniteScrollSelect<IAuthor>
                   isFloat
                   allowClear
@@ -955,6 +970,17 @@ const ArticlesForm: React.FC<IProps> = ({
                 name="authorName"
                 className="!mb-0 !mt-2"
                 dependencies={["authorId"]}
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      const authorId = form.getFieldValue('authorId');
+                      if (!value && !authorId) {
+                        return Promise.reject(new Error('Author is required (select existing or type new name)'));
+                      }
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
                 <FloatInput placeholder="Or type a new author name to auto-create" />
               </Form.Item>
