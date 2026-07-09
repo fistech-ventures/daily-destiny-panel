@@ -13,7 +13,7 @@ interface IRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
 
 interface IProps<D = any> extends TableProps<D> {
   dataSource: D[];
-  onDragEnd?: (data: D[], oldData: D[]) => void;
+  onDragEnd?: (data: D[], oldData: D[], activeId?: TId) => void;
 }
 
 const DragSortableTable = <D extends { key: TId }>({
@@ -66,7 +66,7 @@ const DragSortableTable = <D extends { key: TId }>({
       const overIdx = dataSource.findIndex((i) => i.key === over?.id);
       const movedData = arrayMove(dataSource, activeIdx, overIdx);
 
-      onDragEnd?.(movedData, dataSource);
+      onDragEnd?.(movedData, dataSource, active.id as TId);
     }
   };
 

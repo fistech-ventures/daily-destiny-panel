@@ -1,7 +1,7 @@
 import BaseModalWithoutClicker from '@base/components/BaseModalWithoutClicker';
 import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
-import DragSortableTable, { handleBulkPurifiedDataFn, handleNewOrderedDataFn } from '@base/components/DragSortableTable';
+import DragSortableTable from '@base/components/DragSortableTable';
 import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Form, Table, Tag, message, Dropdown, Image } from 'antd';
@@ -191,7 +191,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
   const router = useRouter();
   const [updateStatusItem, setUpdateStatusItem] = useState<IArticle>(null);
   const [previewItem, setPreviewItem] = useState<IArticle>(null);
-  const isBulkUpdateRef = useRef(false);
+  const isUpdatingRef = useRef(false);
   const [confirmationDialog, setConfirmationDialog] = useState<{
     open: boolean;
     title: string;
@@ -208,8 +208,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
         }
 
         setUpdateStatusItem(null);
-        // Only show message if not doing bulk update
-        if (!isBulkUpdateRef.current) {
+        if (!isUpdatingRef.current) {
           messageApi.success(res.message);
         }
       },
@@ -228,42 +227,48 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     },
   });
 
-  const handleDragEnd = (newData: any[], oldData: any[]) => {
+  const handleDragEnd = (newData: any[], oldData: any[], activeId?: any) => {
     if (!meta) {
       messageApi.warning('Pagination metadata is required for drag and drop functionality');
       return;
     }
 
     getAccess(['articles:update'], () => {
-      const orderedData = handleNewOrderedDataFn(newData, meta);
-      const bulkUpdateData = handleBulkPurifiedDataFn(orderedData, oldData);
-      
-      if (bulkUpdateData.length === 0) {
-        messageApi.info('No position changes detected');
+      if (!activeId) {
+        messageApi.warning('Could not identify the dragged article');
         return;
       }
 
-      isBulkUpdateRef.current = true;
+      // Find the dragged article in the new data
+      const draggedIndex = newData.findIndex((item: any) => item.id === activeId);
+      if (draggedIndex === -1) {
+        messageApi.warning('Could not find the dragged article in the list');
+        return;
+      }
 
-      // Make multiple individual update calls
-      const updatePromises = bulkUpdateData.map(item => 
-        articleUpdateFn.mutateAsync({
-          id: item.id,
-          data: { position: item.data.order_priority }
-        })
-      );
+      // Calculate the new position (1-based global position across pages)
+      const newPosition = (meta.page - 1) * meta.limit + draggedIndex + 1;
 
-      // Execute all updates
-      Promise.all(updatePromises)
-        .then(() => {
-          messageApi.success(`Successfully updated ${bulkUpdateData.length} article positions`);
+      isUpdatingRef.current = true;
+
+      // Single API call - only update the dragged article's position
+      articleUpdateFn.mutateAsync({
+        id: activeId,
+        data: { position: newPosition },
+      })
+        .then((res) => {
+          if (res.success) {
+            messageApi.success('Position updated successfully');
+          } else {
+            messageApi.error(res.message || 'Failed to update position');
+          }
         })
         .catch((error) => {
-          messageApi.error('Failed to update some article positions');
-          console.error('Bulk update error:', error);
+          messageApi.error('Failed to update position');
+          console.error('Position update error:', error);
         })
         .finally(() => {
-          isBulkUpdateRef.current = false;
+          isUpdatingRef.current = false;
         });
     });
   };
