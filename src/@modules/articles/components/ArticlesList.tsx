@@ -247,7 +247,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       }
 
       // Calculate the new position (1-based global position across pages)
-      const newPosition = (meta.page - 1) * meta.limit + draggedIndex + 1;
+      const newPosition = (meta.page - 1) * meta.limit + draggedIndex;
 
       isUpdatingRef.current = true;
 
@@ -365,7 +365,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       key: 'categories',
       dataIndex: 'categories',
       title: 'Categories',
-      width: 200,
+      width: 150,
       render: (categories, record) => {
         const cats = categories?.length ? categories : (record?.category ? [record.category] : []);
         return (
@@ -378,6 +378,11 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
           </div>
         );
       },
+    },
+    {
+      key: 'position',
+      dataIndex: 'position',
+      title: 'Position',
     },
     // {
     //   key: 'Modified',
