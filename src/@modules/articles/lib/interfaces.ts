@@ -64,6 +64,7 @@ export interface IArticle extends IBaseEntity {
   categories?: ICategory[];
   tags: string[];
   metaTitle: string;
+  hanger?: string;
   metaDescription: string;
   subCategoryId?: TId;
   subCategory?: ISubCategory;
@@ -110,6 +111,7 @@ export interface IArticleCreate {
   medias?: IMedia[];
   tags?: string[];
   metaTitle: string;
+  hanger?: string;
   metaDescription: string;
   coverImageCredit: string;
   seoMetaData: ISeoMetaData;

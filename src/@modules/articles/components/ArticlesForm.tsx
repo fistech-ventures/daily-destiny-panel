@@ -566,6 +566,13 @@ const ArticlesForm: React.FC<IProps> = ({
               </Form.Item>
             </Col>
           )}
+          {currentType !== "video" && currentType !== "photo" && (
+            <Col xs={24} sm={12}>
+              <Form.Item name="hanger" className="!mb-0">
+                <FloatInput placeholder="Hanger" />
+              </Form.Item>
+            </Col>
+          )}
 
           {currentType !== "video" && currentType !== "photo" && (
             <Col xs={24}>
