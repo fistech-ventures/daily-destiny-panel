@@ -279,6 +279,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     coverImage: elem?.coverImage,
     title: elem?.title,
     code: elem?.code,
+    shoulder: elem?.shoulder,
     categories: elem?.categories,
     category: elem?.category,
     modified: {
@@ -355,6 +356,13 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       dataIndex: 'title',
       title: 'Title',
       width: 300,
+    },
+    {
+      key: 'shoulder',
+      dataIndex: 'shoulder',
+      title: 'Shoulder',
+      ellipsis: true,
+      render: (text) => text || '—',
     },
     {
       key: 'code',

@@ -10,7 +10,7 @@ import { SubCategoriesHooks } from '@modules/sub-categories/lib/hooks';
 import { ISubCategory } from '@modules/sub-categories/lib/interfaces';
 import { UsersHooks } from '@modules/users/lib/hooks';
 import { IUser } from '@modules/users/lib/interfaces';
-import { Button, DatePicker, Drawer, Form, Radio, Select, Space, Row, Col } from 'antd';
+import { Button, DatePicker, Drawer, Form, Input, Radio, Select, Space, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -173,6 +173,12 @@ const ArticlesFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
                     { value: ENUM_ARTICLES_STATUS_TYPES.Archived, label: 'Archived' },
                   ]}
                 />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item name="shoulder" label="Shoulder" className="!mb-0">
+                <Input placeholder="Filter by shoulder..." allowClear />
               </Form.Item>
             </Col>
 

@@ -8,6 +8,7 @@ import { IUser } from '@modules/users/lib/interfaces';
 
 export interface IArticlesFilter extends IBaseFilter {
   isExclusive?: boolean;
+  shoulder?: string;
   type?: string;
   status?: string;
   isFeatured?: boolean;
@@ -65,6 +66,7 @@ export interface IArticle extends IBaseEntity {
   tags: string[];
   metaTitle: string;
   hanger?: string;
+  shoulder?: string;
   metaDescription: string;
   subCategoryId?: TId;
   subCategory?: ISubCategory;
@@ -112,6 +114,7 @@ export interface IArticleCreate {
   tags?: string[];
   metaTitle: string;
   hanger?: string;
+  shoulder?: string;
   metaDescription: string;
   coverImageCredit: string;
   seoMetaData: ISeoMetaData;
