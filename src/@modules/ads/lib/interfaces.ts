@@ -4,6 +4,7 @@ import { TAdsType } from './enums';
 export interface IAdsFilter extends IBaseFilter {
   pageType?: string;
   position?: string;
+  categoryId?: string;
 }
 
 export interface IAd extends IBaseEntity {

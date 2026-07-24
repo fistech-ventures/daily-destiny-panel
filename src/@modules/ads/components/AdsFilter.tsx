@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { FaFilter } from 'react-icons/fa';
 import { MdClear } from 'react-icons/md';
+import { CategoriesHooks } from '@modules/categories/lib/hooks';
 import { IAdsFilter } from '../lib/interfaces';
 import { PAGE_TYPES, POSITIONS_BY_PAGE } from '../lib/constants';
 
@@ -20,6 +21,16 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [selectedPageType, setSelectedPageType] = useState<string | undefined>(initialValues?.pageType);
 
+  const categoriesQuery = CategoriesHooks.useFind({
+    options: { limit: 9999 },
+  });
+
+  const availableCategories =
+    categoriesQuery.data?.data?.map((cat) => ({
+      label: cat.title,
+      value: cat.id,
+    })) || [];
+
   const getAvailablePositions = () => {
     if (!selectedPageType) return [];
     return POSITIONS_BY_PAGE[selectedPageType as keyof typeof POSITIONS_BY_PAGE] || [];
@@ -28,6 +39,7 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
   const handlePageTypeChange = (value: string) => {
     setSelectedPageType(value);
     formInstance.setFieldValue('position', undefined);
+    formInstance.setFieldValue('categoryId', undefined);
   };
 
   useEffect(() => {
@@ -39,6 +51,7 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       dateRange: [],
       pageType: undefined,
       position: undefined,
+      categoryId: undefined,
       ...initialValues,
     };
 
@@ -52,7 +65,10 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       delete values.endDate;
     }
 
-    formInstance.setFieldsValue(values);
+    formInstance.setFieldsValue({
+      ...values,
+      categoryId: values.categoryId || undefined,
+    });
   }, [formInstance, initialValues]);
 
   return (
@@ -93,6 +109,16 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
               allowClear
             />
           </Form.Item>
+          {selectedPageType === 'categoryPage' && (
+            <Form.Item name="categoryId" className="!mb-0">
+              <Select
+                placeholder="Category"
+                options={availableCategories}
+                loading={categoriesQuery.isLoading}
+                allowClear
+              />
+            </Form.Item>
+          )}
           <Form.Item name="dateRange" className="!mb-0">
             <DatePicker.RangePicker className="w-full" />
           </Form.Item>
