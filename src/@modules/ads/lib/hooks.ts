@@ -2,7 +2,7 @@ import { TId } from '@base/interfaces';
 import { InfiniteQueryConfig, MutationConfig, queryClient, QueryConfig } from '@lib/config';
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { IAdsFilter } from './interfaces';
-import { AdsServices } from './services';
+import { AdsServices, WebAdsServices } from './services';
 
 export const AdsHooks = {
   useFindById: ({ id, config }: { id: TId; config?: QueryConfig<typeof AdsServices.findById> }) => {
@@ -81,6 +81,28 @@ export const AdsHooks = {
         queryClient.invalidateQueries({ queryKey: [AdsServices.NAME] });
       },
       ...config,
+    });
+  },
+};
+
+export const WebAdsHooks = {
+  useFind: ({ options, config }: { options: IAdsFilter; config?: QueryConfig<typeof WebAdsServices.find> }) => {
+    const { queryKey, ...rest } = config ?? {};
+
+    return useQuery({
+      queryKey: [...(queryKey || []), WebAdsServices.NAME, options],
+      queryFn: () => WebAdsServices.find(options),
+      ...rest,
+    });
+  },
+
+  useFindById: ({ id, config }: { id: TId; config?: QueryConfig<typeof WebAdsServices.findById> }) => {
+    const { queryKey, ...rest } = config ?? {};
+
+    return useQuery({
+      queryKey: [...(queryKey || []), WebAdsServices.NAME, id],
+      queryFn: () => WebAdsServices.findById(id),
+      ...rest,
     });
   },
 };

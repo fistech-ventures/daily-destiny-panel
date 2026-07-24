@@ -1,7 +1,7 @@
 import BaseModalWithoutClicker from '@base/components/BaseModalWithoutClicker';
 import ConfirmationDialog from '@base/components/ConfirmationDialog';
 import CustomSwitch from '@base/components/CustomSwitch';
-import DragSortableTable, { handleBulkPurifiedDataFn, handleNewOrderedDataFn } from '@base/components/DragSortableTable';
+import DragSortableTable from '@base/components/DragSortableTable';
 import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Form, Table, Tag, message, Dropdown, Image } from 'antd';
@@ -81,8 +81,11 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
               {article?.author?.nameBn && (
                 <span className="font-semibold text-primary">{article.author.nameBn}</span>
               )}
-              {article?.author?.nameBn && article?.category?.titleBn && <span>|</span>}
-              {article?.category?.titleBn && (
+              {article?.author?.nameBn && (article?.categories?.length || article?.category) && <span>|</span>}
+              {(article?.categories?.length > 0) && (
+                <span>{article.categories.map((c) => c?.titleBn || c?.title).join(', ')}</span>
+              )}
+              {!article?.categories?.length && article?.category?.titleBn && (
                 <span>{article.category.titleBn}</span>
               )}
             </div>
@@ -147,9 +150,14 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
           </div>
         )}
 
-        {(article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
+        {(article?.categories?.length || article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
           <p className="text-sm text-gray-500 mb-6">
-            {[article?.category?.titleBn, article?.author?.nameBn].filter(Boolean).join(' | ')}
+            {[
+              article?.categories?.length
+                ? article.categories.map((c) => c?.titleBn || c?.title).join(', ')
+                : article?.category?.titleBn,
+              article?.author?.nameBn
+            ].filter(Boolean).join(' | ')}
           </p>
         )}
 
@@ -183,7 +191,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
   const router = useRouter();
   const [updateStatusItem, setUpdateStatusItem] = useState<IArticle>(null);
   const [previewItem, setPreviewItem] = useState<IArticle>(null);
-  const isBulkUpdateRef = useRef(false);
+  const isUpdatingRef = useRef(false);
   const [confirmationDialog, setConfirmationDialog] = useState<{
     open: boolean;
     title: string;
@@ -200,8 +208,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
         }
 
         setUpdateStatusItem(null);
-        // Only show message if not doing bulk update
-        if (!isBulkUpdateRef.current) {
+        if (!isUpdatingRef.current) {
           messageApi.success(res.message);
         }
       },
@@ -220,42 +227,48 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     },
   });
 
-  const handleDragEnd = (newData: any[], oldData: any[]) => {
+  const handleDragEnd = (newData: any[], oldData: any[], activeId?: any) => {
     if (!meta) {
       messageApi.warning('Pagination metadata is required for drag and drop functionality');
       return;
     }
 
     getAccess(['articles:update'], () => {
-      const orderedData = handleNewOrderedDataFn(newData, meta);
-      const bulkUpdateData = handleBulkPurifiedDataFn(orderedData, oldData);
-      
-      if (bulkUpdateData.length === 0) {
-        messageApi.info('No position changes detected');
+      if (!activeId) {
+        messageApi.warning('Could not identify the dragged article');
         return;
       }
 
-      isBulkUpdateRef.current = true;
+      // Find the dragged article in the new data
+      const draggedIndex = newData.findIndex((item: any) => item.id === activeId);
+      if (draggedIndex === -1) {
+        messageApi.warning('Could not find the dragged article in the list');
+        return;
+      }
 
-      // Make multiple individual update calls
-      const updatePromises = bulkUpdateData.map(item => 
-        articleUpdateFn.mutateAsync({
-          id: item.id,
-          data: { position: item.data.order_priority }
-        })
-      );
+      // Calculate the new position (1-based global position across pages)
+      const newPosition = (meta.page - 1) * meta.limit + draggedIndex;
 
-      // Execute all updates
-      Promise.all(updatePromises)
-        .then(() => {
-          messageApi.success(`Successfully updated ${bulkUpdateData.length} article positions`);
+      isUpdatingRef.current = true;
+
+      // Single API call - only update the dragged article's position
+      articleUpdateFn.mutateAsync({
+        id: activeId,
+        data: { position: newPosition },
+      })
+        .then((res) => {
+          if (res.success) {
+            messageApi.success('Position updated successfully');
+          } else {
+            messageApi.error(res.message || 'Failed to update position');
+          }
         })
         .catch((error) => {
-          messageApi.error('Failed to update some article positions');
-          console.error('Bulk update error:', error);
+          messageApi.error('Failed to update position');
+          console.error('Position update error:', error);
         })
         .finally(() => {
-          isBulkUpdateRef.current = false;
+          isUpdatingRef.current = false;
         });
     });
   };
@@ -266,6 +279,8 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
     coverImage: elem?.coverImage,
     title: elem?.title,
     code: elem?.code,
+    shoulder: elem?.shoulder,
+    categories: elem?.categories,
     category: elem?.category,
     modified: {
       author: elem?.author?.name,
@@ -343,40 +358,59 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
       width: 300,
     },
     {
+      key: 'shoulder',
+      dataIndex: 'shoulder',
+      title: 'Shoulder',
+      ellipsis: true,
+      render: (text) => text || '—',
+    },
+    {
       key: 'code',
       dataIndex: 'code',
       title: 'Code',
     },
     {
-      key: 'category',
-      dataIndex: 'category',
-      title: 'Category',
-      render: (category) => (
-        <div className="flex flex-col gap-1">
-          <span>{category?.title}</span>
-          <span>{category?.titleBn}</span>
-        </div>
-      ),
+      key: 'categories',
+      dataIndex: 'categories',
+      title: 'Categories',
+      width: 150,
+      render: (categories, record) => {
+        const cats = categories?.length ? categories : (record?.category ? [record.category] : []);
+        return (
+          <div className="flex flex-col gap-1">
+            {cats?.map((cat) => (
+              <Tag key={cat?.id} className="!mr-1 !mb-1">
+                {cat?.title || cat?.titleBn}
+              </Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
-      key: 'Modified',
-      dataIndex: 'modified',
-      title: 'Modified',
-      width: 170,
-      render: (modified) => (
-        <div className="flex flex-col gap-1">
-          <span>
-            A: <b>{modified?.author}</b>
-          </span>
-          <span>
-            C: <b>{modified?.createdBy}</b>
-          </span>
-          <span>
-            P: <b>{modified?.publishedBy}</b>
-          </span>
-        </div>
-      ),
+      key: 'position',
+      dataIndex: 'position',
+      title: 'Position',
     },
+    // {
+    //   key: 'Modified',
+    //   dataIndex: 'modified',
+    //   title: 'Modified',
+    //   width: 170,
+    //   render: (modified) => (
+    //     <div className="flex flex-col gap-1">
+    //       <span>
+    //         A: <b>{modified?.author}</b>
+    //       </span>
+    //       <span>
+    //         C: <b>{modified?.createdBy}</b>
+    //       </span>
+    //       <span>
+    //         P: <b>{modified?.publishedBy}</b>
+    //       </span>
+    //     </div>
+    //   ),
+    // },
     {
       key: 'date',
       dataIndex: 'date',

@@ -151,7 +151,7 @@ const SpecialEventsForm: React.FC<IProps> = ({ isLoading, form, formType = 'crea
                         </Typography.Text>
                         <br />
                         <Typography.Text type="secondary" style={{ fontSize: 11 }}>
-                          {article.category?.title || ''} {article.author?.name ? `- ${article.author.name}` : ''}
+                          {article.categories?.length ? article.categories.map((c: any) => c?.title || c?.titleBn).join(', ') : (article.category?.title || '')} {article.author?.name ? `- ${article.author.name}` : ''}
                         </Typography.Text>
                       </div>
                     </Space>

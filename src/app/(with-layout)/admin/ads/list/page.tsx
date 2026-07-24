@@ -8,7 +8,6 @@ import AdsForm from '@modules/ads/components/AdsForm';
 import AdsList from '@modules/ads/components/AdsList';
 import { ENUM_ADS_TYPES } from '@modules/ads/lib/enums';
 import { AdsHooks } from '@modules/ads/lib/hooks';
-import { IAdsFilter } from '@modules/ads/lib/interfaces';
 import Authorization from '@modules/auth/components/Authorization';
 import WithAuthorization from '@modules/auth/components/WithAuthorization';
 import { Button, Drawer, Form, message, Tag } from 'antd';
@@ -21,7 +20,9 @@ const AdsPage = () => {
   const [messageApi, messageHolder] = message.useMessage();
   const [formInstance] = Form.useForm();
   const [isDrawerOpen, setDrawerOpen] = useState(false);
-  const { page = 1, limit = 10, ...rest } = Toolbox.parseQueryParams<IAdsFilter>(`?${searchParams.toString()}`);
+  const { categories: _, page = 1, limit = 10, ...rest } = Toolbox.parseQueryParams<Record<string, any>>(
+    `?${searchParams.toString()}`,
+  );
 
   const adsQuery = AdsHooks.useFind({
     options: {
@@ -65,6 +66,7 @@ const AdsPage = () => {
         initialValues={Toolbox.toCleanObject(Object.fromEntries(searchParams.entries()))}
         onChange={(values) => {
           const params = Toolbox.toCleanObject({ ...Object.fromEntries(searchParams.entries()), ...values });
+          delete params.categories;
           const queryString = new URLSearchParams(params).toString();
           router.push(`?${queryString}`);
         }}
@@ -78,6 +80,7 @@ const AdsPage = () => {
           total: adsQuery.data?.meta?.total,
           onChange: (page, limit) => {
             const params = Toolbox.toCleanObject({ ...Object.fromEntries(searchParams.entries()), page, limit });
+            delete params.categories;
             const queryString = new URLSearchParams(params).toString();
             router.push(`?${queryString}`);
           },

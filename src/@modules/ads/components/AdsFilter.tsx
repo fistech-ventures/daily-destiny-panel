@@ -1,11 +1,13 @@
 import { Toolbox } from '@lib/utils';
-import { Button, DatePicker, Drawer, Form, Radio, Space } from 'antd';
+import { Button, DatePicker, Drawer, Form, Radio, Space, Select } from 'antd';
 import dayjs from 'dayjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { FaFilter } from 'react-icons/fa';
 import { MdClear } from 'react-icons/md';
+import { CategoriesHooks } from '@modules/categories/lib/hooks';
 import { IAdsFilter } from '../lib/interfaces';
+import { PAGE_TYPES, POSITIONS_BY_PAGE } from '../lib/constants';
 
 interface IProps {
   initialValues: IAdsFilter;
@@ -17,6 +19,28 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
   const searchParams = useSearchParams();
   const [formInstance] = Form.useForm();
   const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [selectedPageType, setSelectedPageType] = useState<string | undefined>(initialValues?.pageType);
+
+  const categoriesQuery = CategoriesHooks.useFind({
+    options: { limit: 9999 },
+  });
+
+  const availableCategories =
+    categoriesQuery.data?.data?.map((cat) => ({
+      label: cat.title,
+      value: cat.id,
+    })) || [];
+
+  const getAvailablePositions = () => {
+    if (!selectedPageType) return [];
+    return POSITIONS_BY_PAGE[selectedPageType as keyof typeof POSITIONS_BY_PAGE] || [];
+  };
+
+  const handlePageTypeChange = (value: string) => {
+    setSelectedPageType(value);
+    formInstance.setFieldValue('position', undefined);
+    formInstance.setFieldValue('categoryId', undefined);
+  };
 
   useEffect(() => {
     formInstance.resetFields();
@@ -25,8 +49,13 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       isActive: '',
       sortOrder: '',
       dateRange: [],
+      pageType: undefined,
+      position: undefined,
+      categoryId: undefined,
       ...initialValues,
     };
+
+    setSelectedPageType(values.pageType);
 
     if (values?.startDate && values?.endDate) {
       values.dateRange.push(dayjs(values.startDate));
@@ -36,7 +65,10 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
       delete values.endDate;
     }
 
-    formInstance.setFieldsValue(values);
+    formInstance.setFieldsValue({
+      ...values,
+      categoryId: values.categoryId || undefined,
+    });
   }, [formInstance, initialValues]);
 
   return (
@@ -61,6 +93,32 @@ const AdsFilter: React.FC<IProps> = ({ initialValues, onChange }) => {
           }, 1000)}
           className="flex flex-col gap-3"
         >
+          <Form.Item name="pageType" className="!mb-0">
+            <Select
+              placeholder="Page Type"
+              options={PAGE_TYPES.map((type) => ({ label: type.label, value: type.value }))}
+              onChange={handlePageTypeChange}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item name="position" className="!mb-0">
+            <Select
+              placeholder="Position"
+              options={getAvailablePositions().map((pos) => ({ label: pos, value: pos }))}
+              disabled={!selectedPageType}
+              allowClear
+            />
+          </Form.Item>
+          {selectedPageType === 'categoryPage' && (
+            <Form.Item name="categoryId" className="!mb-0">
+              <Select
+                placeholder="Category"
+                options={availableCategories}
+                loading={categoriesQuery.isLoading}
+                allowClear
+              />
+            </Form.Item>
+          )}
           <Form.Item name="dateRange" className="!mb-0">
             <DatePicker.RangePicker className="w-full" />
           </Form.Item>
