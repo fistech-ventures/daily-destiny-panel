@@ -1,7 +1,10 @@
-import { IBaseEntity, IBaseFilter, IBaseResponse, TId } from '@base/interfaces';
+import { IBaseEntity, IBaseFilter, IBaseResponse } from '@base/interfaces';
 import { TAdsType } from './enums';
 
-export interface IAdsFilter extends IBaseFilter {}
+export interface IAdsFilter extends IBaseFilter {
+  pageType?: string;
+  position?: string;
+}
 
 export interface IAd extends IBaseEntity {
   type: TAdsType;
@@ -12,7 +15,9 @@ export interface IAd extends IBaseEntity {
   redirectUrl: string;
   startDate: string;
   endDate: string;
-  requestId: TId;
+  pageType?: string;
+  position?: string;
+  isActive: boolean;
 }
 
 export interface IAdsResponse extends IBaseResponse {
@@ -22,12 +27,14 @@ export interface IAdsResponse extends IBaseResponse {
 export interface IAdCreate {
   type: TAdsType;
   title: string;
-  imageUrl: string;
-  videoUrl: string;
-  scriptEmbedCode: string;
-  redirectUrl: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  scriptEmbedCode?: string;
+  redirectUrl?: string;
   startDate: string;
   endDate: string;
-  requestId: TId;
+  pageType?: string;
+  position?: string;
+  categories?: string[];
   isActive: boolean;
 }

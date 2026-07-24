@@ -1,13 +1,13 @@
-import ConfirmationDialog from '@base/components/ConfirmationDialog';
-import CustomSwitch from '@base/components/CustomSwitch';
-import { getAccess } from '@modules/auth/lib/utils/client';
-import type { PaginationProps, TableColumnsType } from 'antd';
-import { Button, Drawer, Form, Table, message } from 'antd';
-import React, { useState } from 'react';
-import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
-import { AdsHooks } from '../lib/hooks';
-import { IAd } from '../lib/interfaces';
-import AdsForm from './AdsForm';
+import ConfirmationDialog from "@base/components/ConfirmationDialog";
+import CustomSwitch from "@base/components/CustomSwitch";
+import { getAccess } from "@modules/auth/lib/utils/client";
+import type { PaginationProps, TableColumnsType } from "antd";
+import { Button, Drawer, Form, Image, Table, message } from "antd";
+import React, { useState } from "react";
+import { AiFillEdit, AiFillDelete } from "react-icons/ai";
+import { AdsHooks } from "../lib/hooks";
+import { IAd } from "../lib/interfaces";
+import AdsForm from "./AdsForm";
 
 interface IProps {
   isLoading: boolean;
@@ -24,7 +24,7 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
     title: string;
     content: string;
     onConfirm: () => void;
-  }>({ open: false, title: '', content: '', onConfirm: () => {} });
+  }>({ open: false, title: "", content: "", onConfirm: () => {} });
 
   const adUpdateFn = AdsHooks.useUpdate({
     config: {
@@ -54,9 +54,12 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
 
   const dataSource = data?.map((elem) => ({
     key: elem?.id,
+    thumbnail: elem?.imageUrl || elem?.videoUrl || elem?.scriptEmbedCode,
     id: elem?.id,
     type: elem?.type,
     title: elem?.title,
+    pageType: elem?.pageType,
+    position: elem?.position,
     isActive: elem?.isActive,
     createdAt: elem?.createdAt,
     createdBy: elem?.createdBy?.fullName,
@@ -66,26 +69,51 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
 
   const columns: TableColumnsType<(typeof dataSource)[number]> = [
     {
-      key: 'type',
-      dataIndex: 'type',
-      title: 'Type',
+      key: "thumbnail",
+      dataIndex: "thumbnail",
+      title: "Creative",
+      render: (thumbnail) => (
+        <Image
+          src={thumbnail}
+          alt="creative"
+          preview={true}
+          style={{ width: 100, height: 50, objectFit: "contain" }}
+        />
+      ),
     },
     {
-      key: 'title',
-      dataIndex: 'title',
-      title: 'Title',
+      key: "type",
+      dataIndex: "type",
+      title: "Type",
     },
     {
-      key: 'isActive',
-      dataIndex: 'isActive',
-      title: 'Active',
+      key: "title",
+      dataIndex: "title",
+      title: "Title",
+    },
+    {
+      key: "pageType",
+      dataIndex: "pageType",
+      title: "Page Type",
+      render: (pageType) => pageType || "-",
+    },
+    {
+      key: "position",
+      dataIndex: "position",
+      title: "Position",
+      render: (position) => position || "-",
+    },
+    {
+      key: "isActive",
+      dataIndex: "isActive",
+      title: "Active",
       render: (isActive, record) => {
         return (
           <CustomSwitch
             checked={isActive}
             onChange={(checked) => {
-              getAccess(['ads:update'], () => {
-                const action = checked ? 'activate' : 'deactivate';
+              getAccess(["ads:update"], () => {
+                const action = checked ? "activate" : "deactivate";
                 setConfirmationDialog({
                   open: true,
                   title: `${action.charAt(0).toUpperCase() + action.slice(1)} Ad`,
@@ -97,7 +125,12 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
                         isActive: checked,
                       },
                     });
-                    setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                    setConfirmationDialog({
+                      open: false,
+                      title: "",
+                      content: "",
+                      onConfirm: () => {},
+                    });
                   },
                 });
               });
@@ -107,17 +140,19 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
       },
     },
     {
-      key: 'id',
-      dataIndex: 'id',
-      title: 'Action',
-      align: 'center',
+      key: "id",
+      dataIndex: "id",
+      title: "Action",
+      align: "center",
       render: (id) => {
         const item = data?.find((item) => item.id === id);
         return (
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+          <div
+            style={{ display: "flex", gap: "8px", justifyContent: "center" }}
+          >
             <Button
               onClick={() => {
-                getAccess(['ads:update'], () => {
+                getAccess(["ads:update"], () => {
                   setUpdateItem(item);
                 });
               }}
@@ -127,14 +162,19 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
             <Button
               danger
               onClick={() => {
-                getAccess(['ads:delete'], () => {
+                getAccess(["ads:delete"], () => {
                   setConfirmationDialog({
                     open: true,
-                    title: 'Delete Ad',
+                    title: "Delete Ad",
                     content: `Are you sure you want to delete "${item.title}"?`,
                     onConfirm: () => {
                       adDeleteFn.mutate(item.id);
-                      setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                      setConfirmationDialog({
+                        open: false,
+                        title: "",
+                        content: "",
+                        onConfirm: () => {},
+                      });
                     },
                   });
                 });
@@ -185,7 +225,14 @@ const AdsList: React.FC<IProps> = ({ isLoading, data, pagination }) => {
         title={confirmationDialog.title}
         content={confirmationDialog.content}
         onConfirm={confirmationDialog.onConfirm}
-        onCancel={() => setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} })}
+        onCancel={() =>
+          setConfirmationDialog({
+            open: false,
+            title: "",
+            content: "",
+            onConfirm: () => {},
+          })
+        }
       />
     </React.Fragment>
   );
