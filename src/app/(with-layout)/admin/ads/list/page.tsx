@@ -8,7 +8,6 @@ import AdsForm from '@modules/ads/components/AdsForm';
 import AdsList from '@modules/ads/components/AdsList';
 import { ENUM_ADS_TYPES } from '@modules/ads/lib/enums';
 import { AdsHooks } from '@modules/ads/lib/hooks';
-import { IAdsFilter } from '@modules/ads/lib/interfaces';
 import Authorization from '@modules/auth/components/Authorization';
 import WithAuthorization from '@modules/auth/components/WithAuthorization';
 import { Button, Drawer, Form, message, Tag } from 'antd';
