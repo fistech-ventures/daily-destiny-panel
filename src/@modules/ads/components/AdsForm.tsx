@@ -214,7 +214,6 @@ const AdsForm: React.FC<IProps> = ({
             <Col xs={24}>
               <Form.Item name="uploader" className="!mb-0">
                 <CustomUploader
-                  isCrop={formValues?.type === ENUM_ADS_TYPES.IMAGE}
                   listType="picture-card"
                   acceptedTypes={getUploaderAcceptedTypes()}
                   sizeLimit={15}
