@@ -136,6 +136,20 @@ const UsersList: React.FC<IProps> = ({ isLoading, isRoles = true, data, paginati
               danger
               onClick={() => {
                 getAccess(['users:delete'], () => {
+                  const isSuperAdmin = item?.roles?.some((r) => (r?.title || '').toLowerCase() === 'super admin');
+
+                  if (isSuperAdmin) {
+                    setConfirmationDialog({
+                      open: true,
+                      title: 'Cannot Delete User',
+                      content: `User "${item.email}" has role \"Super Admin\" and cannot be deleted.`,
+                      onConfirm: () => {
+                        setConfirmationDialog({ open: false, title: '', content: '', onConfirm: () => {} });
+                      },
+                    });
+                    return;
+                  }
+
                   setConfirmationDialog({
                     open: true,
                     title: 'Delete User',
