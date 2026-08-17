@@ -6,7 +6,7 @@ import { getAccess } from '@modules/auth/lib/utils/client';
 import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Form, Table, Tag, message, Dropdown, Image } from 'antd';
 import dayjs from 'dayjs';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AiFillEdit, AiOutlineEye, AiFillDelete } from 'react-icons/ai';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import { ENUM_ARTICLES_STATUS_TYPES } from '../lib/enums';
@@ -14,6 +14,7 @@ import { ArticlesHooks } from '../lib/hooks';
 import { IArticle } from '../lib/interfaces';
 import ArticlesStatusForm from './ArticlesStatusForm';
 import { useRouter } from 'next/navigation';
+import { enrichArticleBodyWithCards } from '../lib/article-embeds';
 
 const getYouTubeEmbedUrl = (url: string): string | null => {
   try {
@@ -35,6 +36,27 @@ interface ArticlePreviewProps {
 }
 
 const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
+  const [enrichedBody, setEnrichedBody] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setEnrichedBody(null);
+
+    if (article?.details) {
+      enrichArticleBodyWithCards(article.details)
+        .then((html) => {
+          if (!cancelled) setEnrichedBody(html);
+        })
+        .catch(() => {
+          if (!cancelled) setEnrichedBody(article.details);
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [article]);
+
   if (!article) return null;
 
   const mediaUrl = article?.medias?.[0]?.url;
@@ -163,8 +185,8 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
 
         {article?.details && article.type !== 'photo' && (
           <article
-            className="prose article-body text-lg prose-lg max-w-none text-gray-800 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: article.details }}
+            className="prose article-body text-xl prose-xl max-w-none text-gray-800 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: enrichedBody ?? article.details }}
           />
         )}
       </div>

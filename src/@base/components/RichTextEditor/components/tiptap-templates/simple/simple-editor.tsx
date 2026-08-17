@@ -361,12 +361,12 @@ const CollapseIcon = ({ className }: { className?: string }) => (
 const FontSizeDropdown = ({ editor }: { editor: Editor | null }) => {
   const { editor: currentEditor } = useTiptapEditor(editor);
   const getCurrentSize = useCallback(() => {
-    if (!currentEditor) return '16';
+    if (!currentEditor) return '20';
     const selectionValue = getSelectionTextStyleAttr(currentEditor, 'fontSize');
     if (selectionValue === 'mixed') return 'Mixed';
     const raw = selectionValue || undefined;
-    const parsed = raw ? Number.parseInt(raw.replace('px', ''), 10) : 16;
-    return Number.isFinite(parsed) ? String(parsed) : '16';
+    const parsed = raw ? Number.parseInt(raw.replace('px', ''), 10) : 20;
+    return Number.isFinite(parsed) ? String(parsed) : '20';
   }, [currentEditor]);
   const [currentSize, setCurrentSize] = useState<string>(getCurrentSize());
   const syncCurrentSize = useCallback(() => setCurrentSize(getCurrentSize()), [getCurrentSize]);
@@ -398,7 +398,7 @@ const FontSizeDropdown = ({ editor }: { editor: Editor | null }) => {
       <Button
         type="button"
         variant="ghost"
-        onClick={() => applyFontSize((currentSize === 'mixed' ? 16 : Number(currentSize)) - 2)}
+        onClick={() => applyFontSize((currentSize === 'mixed' ? 20 : Number(currentSize)) - 2)}
         aria-label="Decrease font size"
         tooltip="Decrease font size"
       >
@@ -408,7 +408,7 @@ const FontSizeDropdown = ({ editor }: { editor: Editor | null }) => {
       <Button
         type="button"
         variant="ghost"
-        onClick={() => applyFontSize((currentSize === 'mixed' ? 16 : Number(currentSize)) + 2)}
+        onClick={() => applyFontSize((currentSize === 'mixed' ? 20 : Number(currentSize)) + 2)}
         aria-label="Increase font size"
         tooltip="Increase font size"
       >
