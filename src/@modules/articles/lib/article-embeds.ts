@@ -99,7 +99,7 @@ function buildEmbedCardHtml(article: IArticle, originalHref: string): string {
     `<div class="relative h-16 w-24 sm:h-20 sm:w-32 shrink-0 overflow-hidden rounded-md bg-gray-100">` +
     `<img src="${image}" alt="${alt}" loading="lazy" class="h-full w-full object-cover" />` +
     `</div>` +
-    `<h3 class="m-0 text-sm sm:text-base font-bold text-gray-900 leading-snug group-hover:text-primary transition-colors">${title}</h3>` +
+    `<h3 class="m-0 text-xl font-bold text-gray-900 leading-snug group-hover:text-primary transition-colors">${title}</h3>` +
     `</a>` +
     `</div>`
   );
