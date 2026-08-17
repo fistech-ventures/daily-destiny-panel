@@ -68,12 +68,14 @@ export const setAuthSession = (session: ISignInSession): ISession => {
       return unAuthorizeSession;
     } else {
       const tokenDec: IToken = jwtDecode(token);
-      const tokenExp = new Date(tokenDec.exp * 1000);
+      
+      // Set cookie expiration to 4 hours from now
+      const fourHoursFromNow = new Date(new Date().getTime() + 4 * 60 * 60 * 1000);
 
       sessionCache = null;
       sessionUserCache = null;
-      Cookies.setData(AUTH_TOKEN_KEY, token, tokenExp);
-      Cookies.setData(PERMISSION_TOKEN_KEY, session.permissionToken, tokenExp);
+      Cookies.setData(AUTH_TOKEN_KEY, token, fourHoursFromNow);
+      Cookies.setData(PERMISSION_TOKEN_KEY, session.permissionToken, fourHoursFromNow);
 
       return {
         isLoading: false,
