@@ -80,6 +80,8 @@ const ArticlesForm: React.FC<IProps> = ({
   const [divisionSearchTerm, setDivisionSearchTerm] = useState(null);
   const [districtSearchTerm, setDistrictSearchTerm] = useState(null);
   const [upazillaSearchTerm, setUpazillaSearchTerm] = useState(null);
+  const [availableAuthors, setAvailableAuthors] = useState<IAuthor[]>([]);
+  const [selectedAuthor, setSelectedAuthor] = useState<IAuthor | null>(null);
 
   // Watch form fields reactively for dependent dropdown queries
   const watchedCategoryIds = Form.useWatch("categoryIds", form);
@@ -332,6 +334,33 @@ const ArticlesForm: React.FC<IProps> = ({
       setActiveLang(initialValues?.language === "Bengali" ? "bn" : "en");
     }
   }, [formType, form, initialValues]);
+
+  // Update available authors when the query data changes
+  useEffect(() => {
+    if (authorsQuery.data?.pages) {
+      const allAuthors = authorsQuery.data.pages.flatMap((page) => page?.data ?? []);
+      const initialAuthors = authorQuery.data?.data?.id ? [authorQuery.data.data] : [];
+      const mergedAuthors = [
+        ...initialAuthors,
+        ...allAuthors.filter((author: IAuthor) => !initialAuthors.some((x: IAuthor) => x.id === author.id)),
+      ];
+      setAvailableAuthors(mergedAuthors);
+    }
+  }, [authorsQuery.data, authorQuery.data]);
+
+  // Fetch selected author details when authorId changes
+  useEffect(() => {
+    const currentAuthorId = form.getFieldValue('authorId');
+    if (currentAuthorId && (!selectedAuthor || selectedAuthor.id !== currentAuthorId)) {
+      // Check if author is in available authors
+      const authorInList = availableAuthors.find(a => a.id === currentAuthorId);
+      if (authorInList) {
+        setSelectedAuthor(authorInList);
+      } else if (authorQuery.data?.data?.id === currentAuthorId) {
+        setSelectedAuthor(authorQuery.data.data);
+      }
+    }
+  }, [form, availableAuthors, authorQuery.data, selectedAuthor]);
 
   useEffect(() => {
     if (shouldReset) {
@@ -966,9 +995,14 @@ const ArticlesForm: React.FC<IProps> = ({
                   showSearch
                   virtual={false}
                   placeholder="Select existing author"
-                  initialOptions={
-                    authorQuery.data?.data?.id ? [authorQuery.data?.data] : []
-                  }
+                  initialOptions={(() => {
+                    const initial = authorQuery.data?.data?.id ? [authorQuery.data?.data] : [];
+                    // Include selected author if it exists and is not in initial options
+                    if (selectedAuthor && !initial.some(a => a.id === selectedAuthor.id)) {
+                      return [...initial, selectedAuthor];
+                    }
+                    return initial;
+                  })()}
                   option={({ item: author }) => ({
                     key: author?.id,
                     label: `${author?.name} (${author?.nameBn})`,
@@ -977,6 +1011,13 @@ const ArticlesForm: React.FC<IProps> = ({
                   onChangeSearchTerm={(searchTerm) =>
                     setAuthorSearchTerm(searchTerm)
                   }
+                  onChange={(selectedAuthorId) => {
+                    // Find the selected author from available authors
+                    const author = availableAuthors.find(a => a.id === selectedAuthorId);
+                    if (author) {
+                      setSelectedAuthor(author);
+                    }
+                  }}
                   query={authorsQuery}
                 />
               </Form.Item>

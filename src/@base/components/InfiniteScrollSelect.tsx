@@ -4,7 +4,7 @@ import { Toolbox } from '@lib/utils';
 import { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query';
 import { Select, Spin, type SelectProps } from 'antd';
 import { DefaultOptionType } from 'antd/es/select';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 interface IProps<D = any> extends SelectProps {
@@ -26,6 +26,7 @@ const InfiniteScrollSelect = <D = any,>({
   ...rest
 }: IProps<D>) => {
   const { ref, inView } = useInView();
+  const [open, setOpen] = useState(false);
 
   const mergeItems = useCallback(() => {
     if (!query.data?.pages) return [];
@@ -60,7 +61,16 @@ const InfiniteScrollSelect = <D = any,>({
           if (!rest.mode) {
             onChangeSearchTerm(null);
           }
+          // Close dropdown after selection in multi-select mode
+          if (rest.mode === 'multiple') {
+            setOpen(false);
+          }
         }}
+        onDeselect={(...e) => {
+          rest.onDeselect?.(...e);
+        }}
+        open={open}
+        onOpenChange={setOpen}
         loading={query.isLoading}
         options={Toolbox.toCleanArray([
           ...items.map((item, idx) => option({ idx, item })),

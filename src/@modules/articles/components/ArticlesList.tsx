@@ -7,8 +7,9 @@ import type { PaginationProps, TableColumnsType } from 'antd';
 import { Button, Form, Table, Tag, message, Dropdown, Image } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
-import { AiFillEdit, AiOutlineEye, AiFillDelete } from 'react-icons/ai';
+import { AiFillEdit, AiOutlineEye, AiFillDelete, AiOutlinePrinter, AiOutlineLink, AiOutlineX } from 'react-icons/ai';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
+import { FaFacebook, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import { ENUM_ARTICLES_STATUS_TYPES } from '../lib/enums';
 import { ArticlesHooks } from '../lib/hooks';
 import { IArticle } from '../lib/interfaces';
@@ -16,18 +17,27 @@ import ArticlesStatusForm from './ArticlesStatusForm';
 import { useRouter } from 'next/navigation';
 import { enrichArticleBodyWithCards } from '../lib/article-embeds';
 
-const getYouTubeEmbedUrl = (url: string): string | null => {
+const getArticleCategory = (article: IArticle) => {
+  if (article?.categories?.length > 0) {
+    return article.categories[0];
+  }
+  return article?.category;
+};
+
+const formatBdTime = (dateStr?: string) => {
+  if (!dateStr) return '';
   try {
-    const urlObj = new URL(url);
-    let videoId = '';
-    if (urlObj.hostname.includes('youtube.com')) {
-      videoId = urlObj.searchParams.get('v') || '';
-    } else if (urlObj.hostname.includes('youtu.be')) {
-      videoId = urlObj.pathname.slice(1);
-    }
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('bn-BD', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   } catch {
-    return null;
+    return '';
   }
 };
 
@@ -59,136 +69,171 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article }) => {
 
   if (!article) return null;
 
-  const mediaUrl = article?.medias?.[0]?.url;
-  const mediaSource = article?.medias?.[0]?.source;
-  const embedUrl = mediaSource === 'youtube' && mediaUrl ? getYouTubeEmbedUrl(mediaUrl) : null;
+  const category = getArticleCategory(article);
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return null;
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return null;
-      return (
-        <>
-          <span>{d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-          <span>, {d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}</span>
-        </>
-      );
-    } catch {
-      return null;
-    }
+  const handleShare = (url: string) => {
+    window.open(url, '_blank', 'width=600,height=400');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleCopyLink = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+  };
+
+  const shareLinks = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
+    x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article.title)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(article.title + ' ' + window.location.href)}`,
   };
 
   return (
     <div className="w-full">
       {/* Print header */}
-      <div className="hidden print:flex print-header items-center justify-between border-b-2 border-red-600 pb-2 mb-3">
-        <div className="flex items-center">
-          <img width={200} height={200} src="/images/logo.png" alt="Prime TV" className="w-16 h-16 object-contain" />
-        </div>
-        <div className="text-right text-xs text-gray-500 flex flex-col justify-center">
-          {article?.date && (
-            <p>{new Date(article.date).toLocaleDateString('bn-BD')}</p>
-          )}
-          <p>{article?.category?.titleBn || ''}</p>
-        </div>
+      <div className="hidden print:flex print-header justify-center border-b border-gray-200 pb-2 mb-0">
+        <img
+          width={200}
+          height={200}
+          src="/images/logo.png"
+          alt="Daily Destiny"
+          className="w-24 h-16 object-contain"
+        />
       </div>
 
-      <div id="article-content" className="px-4 py-8 bg-background rounded-md">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-6">{article.title}</h1>
+      <div id="article-content" className="px-2 lg:px-4 print:px-0 py-8 bg-background rounded-md">
+        <h1 className="text-sm md:text-base font-bold text-blue-700 leading-tight mb-2 lg:mb-6">
+          {article.shoulder}
+        </h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-2 lg:mb-6">
+          {article.title}
+        </h1>
 
-        {(article?.author || article?.category) && (
-          <div className="flex flex-col gap-2 border-b border-gray-100 pb-4 mb-6">
-            <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base">
-              {article?.author?.nameBn && (
-                <span className="font-semibold text-primary">{article.author.nameBn}</span>
-              )}
-              {article?.author?.nameBn && (article?.categories?.length || article?.category) && <span>|</span>}
-              {(article?.categories?.length > 0) && (
-                <span>{article.categories.map((c) => c?.titleBn || c?.title).join(', ')}</span>
-              )}
-              {!article?.categories?.length && article?.category?.titleBn && (
-                <span>{article.category.titleBn}</span>
-              )}
+        <div className="flex print:flex-row print:justify-between flex-col gap-2 border-b border-gray-200 pb-4 mb-6">
+          <div className="flex items-center gap-2 text-gray-600 text-sm md:text-base">
+            <span className="font-semibold text-primary">
+              {article.author?.nameBn ?? article.author?.name ?? ''}
+            </span>
+            <span>|</span>
+            <span>
+              {category?.titleBn ?? category?.title ?? ''}
+            </span>
+          </div>
+          <div className="text-gray-500 text-sm">
+            {formatBdTime(article.date)}
+          </div>
+        </div>
+
+        {/* Cover image */}
+        {article?.coverImage && (
+          <>
+            <div className="relative w-full aspect-video object-contain rounded-lg overflow-hidden mb-4 print:max-h-87.5">
+              <img
+                src={article.coverImage}
+                alt={article.title}
+                className="w-full h-full object-contain"
+              />
             </div>
-            {article?.date && (
-              <div className="text-gray-500 text-sm">
-                {formatDate(article.date)}
-              </div>
+            {article.coverImageCredit && (
+              <p className="text-sm text-gray-500 mb-2 lg:mb-6">{article.coverImageCredit}</p>
             )}
-          </div>
+          </>
         )}
 
-        {/* Video player */}
-        {article.type !== 'photo' && embedUrl && (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-4">
-            <iframe
-              src={embedUrl}
-              title={article.title}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
-        {article.type !== 'photo' && mediaSource === 'do-space' && mediaUrl && (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-4 bg-black">
-            <video
-              src={mediaUrl}
-              controls
-              className="w-full h-full"
-              poster={article?.coverImage || undefined}
+        <hr className="print:block hidden print:mb-4" />
+
+        {/* Social Share */}
+        <div className="print:hidden">
+          <div className="flex items-center gap-4 mb-4 py-4 border-y border-gray-100">
+            {/* Facebook */}
+            <button
+              onClick={() => handleShare(shareLinks.facebook)}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Share on Facebook"
             >
-              Your browser does not support the video tag.
-            </video>
+              <FaFacebook size={20} />
+            </button>
+
+            {/* X (Twitter) */}
+            <button
+              onClick={() => handleShare(shareLinks.x)}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Share on X"
+            >
+              <AiOutlineX size={16} />
+            </button>
+
+            {/* LinkedIn */}
+            <button
+              onClick={() => handleShare(shareLinks.linkedin)}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Share on LinkedIn"
+            >
+              <FaLinkedin size={20} />
+            </button>
+
+            {/* WhatsApp */}
+            <button
+              onClick={() => handleShare(shareLinks.whatsapp)}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Share on WhatsApp"
+            >
+              <FaWhatsapp size={20} />
+            </button>
+
+            {/* Print */}
+            <button
+              onClick={handlePrint}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Print Article"
+            >
+              <AiOutlinePrinter size={20} />
+            </button>
+
+            {/* Copy Link */}
+            <button
+              onClick={handleCopyLink}
+              className="p-2 lg:p-3 rounded-full bg-brand-light text-brand hover-bg-brand transition-all cursor-pointer"
+              title="Copy Link"
+            >
+              <AiOutlineLink size={20} />
+            </button>
           </div>
+        </div>
+
+        {/* Article body */}
+        {article?.details && article.type !== 'photo' && (
+          <article
+            className="prose article-body text-xl prose-xl max-w-none text-gray-800 leading-normal whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: enrichedBody ?? article.details }}
+          />
         )}
 
-        {/* Photo gallery for photo articles */}
-        {article.type === 'photo' && article?.medias?.length > 0 && (
-          <div className="space-y-8 mb-6">
-            {article.medias.map((media, idx) => (
-              <div key={idx} className="flex flex-col gap-2">
-                <div className="relative w-full rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  <img
-                    src={media.url}
-                    alt={media.caption || `Photo ${idx + 1}`}
-                    className="w-full h-auto object-contain max-h-[500px]"
-                    loading="lazy"
-                  />
-                </div>
-                {media.caption && (
-                  <p className="text-sm text-gray-500 italic text-center">{media.caption}</p>
-                )}
-              </div>
+        {/* Tags */}
+        {article?.tags && article.tags.length > 0 && (
+          <div className="no-print flex flex-wrap items-center gap-2 pt-3 lg:pt-6">
+            {article.tags.map((tag, index) => (
+              <span
+                key={`${tag}-${index}`}
+                className="text-sm font-semibold text-white shrink-0 bg-[#D22331] px-3 py-1 rounded-md inline-block"
+              >
+                {tag}
+              </span>
             ))}
           </div>
         )}
 
-        {/* Fallback cover image when no video */}
-        {article.type !== 'photo' && !embedUrl && mediaSource !== 'do-space' && article?.coverImage && (
-          <div className="relative w-full aspect-video object-cover rounded-lg overflow-hidden mb-4 print:max-h-87.5">
-            <img src={article.coverImage} alt={article.title} className="w-full object-cover" />
-          </div>
-        )}
-
-        {(article?.categories?.length || article?.category?.titleBn || article?.author?.nameBn) && !embedUrl && mediaSource !== 'do-space' && article.type !== 'photo' && (
-          <p className="text-sm text-gray-500 mb-6">
-            {[
-              article?.categories?.length
-                ? article.categories.map((c) => c?.titleBn || c?.title).join(', ')
-                : article?.category?.titleBn,
-              article?.author?.nameBn
-            ].filter(Boolean).join(' | ')}
-          </p>
-        )}
-
-        {article?.details && article.type !== 'photo' && (
-          <article
-            className="prose article-body text-xl prose-xl max-w-none text-gray-800 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: enrichedBody ?? article.details }}
-          />
-        )}
+        {/* Print footer */}
+        <div className="hidden print:flex justify-center py-2 border-y mt-10">
+          <img src="/images/logo.png" alt="Daily Destiny" className="w-24 h-16 object-contain" />
+        </div>
+        <div className="hidden print:flex justify-between items-center py-2">
+          <p className="text-sm text-gray-500">{article.author?.nameBn ?? article.author?.name ?? ''}</p>
+          <p className="text-sm text-gray-500">© {new Date().getFullYear()} Daily Destiny</p>
+        </div>
       </div>
     </div>
   );
@@ -393,7 +438,7 @@ const ArticlesList: React.FC<IProps> = ({ isLoading, data, pagination, pageType 
         return (
           <div className="flex flex-col gap-1">
             {cats?.map((cat) => (
-              <Tag key={cat?.id} className="!mr-1 !mb-1">
+              <Tag key={cat?.id} className="mr-1! mb-1!">
                 {cat?.title || cat?.titleBn}
               </Tag>
             ))}
