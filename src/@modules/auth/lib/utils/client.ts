@@ -6,11 +6,30 @@ import { Cookies, getNotificationInstance } from '@lib/utils';
 import type { MenuProps, TableColumnsType } from 'antd';
 import { jwtDecode } from 'jwt-decode';
 import { useEffect, useState } from 'react';
-import { AUTH_TOKEN_KEY, PERMISSION_TOKEN_KEY } from '../constant';
+import { AUTH_TOKEN_KEY, PERMISSION_TOKEN_KEY, REFRESH_TOKEN_KEY } from '../constant';
 import { IPermissionToken, ISession, ISignInSession, IToken } from '../interfaces';
 
 let sessionCache: ISession = null;
 let sessionUserCache: ISession['user'] = null;
+/**
+ * Calculates cookie expiration from a JWT token's exp claim.
+ * Adds 1 minute buffer so the cookie outlives the token,
+ * allowing the 401 → refresh flow to trigger.
+ */
+const getCookieExpirationFromJwt = (jwtToken: string): Date => {
+  try {
+    const decoded: IToken = jwtDecode(jwtToken);
+    if (decoded?.exp) {
+      // Expire 1 minute after the JWT expires
+      return new Date(decoded.exp * 1000 + 60 * 1000);
+    }
+  } catch {
+    // fallback
+  }
+  // Fallback: 4 hours from now
+  return new Date(new Date().getTime() + 4 * 60 * 60 * 1000);
+};
+
 export const unAuthorizeSession: ISession = {
   isLoading: false,
   isAuthenticate: false,
@@ -69,13 +88,16 @@ export const setAuthSession = (session: ISignInSession): ISession => {
     } else {
       const tokenDec: IToken = jwtDecode(token);
       
-      // Set cookie expiration to 4 hours from now
-      const fourHoursFromNow = new Date(new Date().getTime() + 4 * 60 * 60 * 1000);
+      // Set cookie expiration based on JWT exp claim (with 1 min buffer)
+      const cookieExpiration = getCookieExpirationFromJwt(token);
+      // Refresh token gets longer expiration matching its JWT exp
+      const refreshTokenExpiration = getCookieExpirationFromJwt(session.refreshToken);
 
       sessionCache = null;
       sessionUserCache = null;
-      Cookies.setData(AUTH_TOKEN_KEY, token, fourHoursFromNow);
-      Cookies.setData(PERMISSION_TOKEN_KEY, session.permissionToken, fourHoursFromNow);
+      Cookies.setData(AUTH_TOKEN_KEY, token, cookieExpiration);
+      Cookies.setData(PERMISSION_TOKEN_KEY, session.permissionToken, cookieExpiration);
+      Cookies.setData(REFRESH_TOKEN_KEY, session.refreshToken, refreshTokenExpiration);
 
       return {
         isLoading: false,
@@ -95,9 +117,9 @@ export const setAuthSession = (session: ISignInSession): ISession => {
 export const clearAuthSession = (): boolean => {
   if (typeof window === 'undefined') return false;
 
-  try {
-    Cookies.removeData(AUTH_TOKEN_KEY);
-    Cookies.removeData(PERMISSION_TOKEN_KEY);
+  try {      Cookies.removeData(AUTH_TOKEN_KEY);
+      Cookies.removeData(PERMISSION_TOKEN_KEY);
+      Cookies.removeData(REFRESH_TOKEN_KEY);
     return true;
   } catch {
     return false;
@@ -123,6 +145,60 @@ export const getAuthToken = (): string => {
   } catch {
     return null;
   }
+};
+
+export const getRefreshToken = (): string => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const token = Cookies.getData(REFRESH_TOKEN_KEY);
+    return token;
+  } catch {
+    return null;
+  }
+};
+
+let refreshPromise: Promise<boolean> | null = null;
+
+export const refreshAuthToken = async (): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+
+  // Prevent multiple concurrent refresh attempts
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) return false;
+
+      const { default: axios } = await import('axios');
+      const { Env } = await import('.environments');
+      const response = await axios.post(`${Env.apiUrl}/auth/refresh-token`, {
+        refreshToken,
+      });
+
+      if (response.data?.success) {
+        const { accessToken, permissionToken, refreshToken: newRefreshToken } = response.data.data;
+        const cookieExpiration = getCookieExpirationFromJwt(accessToken);
+        const refreshTokenExpiration = getCookieExpirationFromJwt(newRefreshToken);
+
+        sessionCache = null;
+        sessionUserCache = null;
+        Cookies.setData(AUTH_TOKEN_KEY, accessToken, cookieExpiration);
+        Cookies.setData(PERMISSION_TOKEN_KEY, permissionToken, cookieExpiration);
+        Cookies.setData(REFRESH_TOKEN_KEY, newRefreshToken, refreshTokenExpiration);
+
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 };
 
 export const getPermissionToken = (): string => {
