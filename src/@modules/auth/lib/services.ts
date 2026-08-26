@@ -9,6 +9,15 @@ const END_POINT: string = '/auth';
 export const AuthServices = {
   NAME: END_POINT,
 
+  refreshToken: async (refreshToken: string): Promise<ISignInResponse> => {
+    try {
+      const res = await AxiosInstance.post(`${END_POINT}/refresh-token`, { refreshToken });
+      return Promise.resolve(res?.data);
+    } catch (error) {
+      throw responseHandlerFn(error);
+    }
+  },
+
   signIn: async (payload: ISignIn): Promise<ISignInResponse> => {
     try {
       const res = await AxiosInstance.post(`${END_POINT}/login`, payload);
